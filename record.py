@@ -66,6 +66,13 @@ def _parseDtraceEntryList(input):
             output.append(match)
     return output
 
+# List available modules and functions.
+def _listModulesAndFunctions(pid):
+    args = '-ln "pid' + str(pid) + ':::entry"'
+    parsed = _parseDtraceEntryList(_dtrace(args))
+    modulesAndFunctions = set(('module(' + row[2] + ') function(' + row[3] + ')') for row in parsed)
+    return list(modulesAndFunctions)
+
 # List available functions, optionally filter by module.
 def _listFunctions(pid, module = None):
     if not module or module == 'list':
@@ -108,6 +115,9 @@ def main():
     if (not _pidRunning(args.pid)):
         print "Process %d is not running" % args.pid
         return
+
+    if (args.module == 'list' and args.function == 'list'):
+        print '\n'.join(_listModulesAndFunctions(args.pid))
 
     if (args.module == 'list'):
         print '\n'.join(_listModules(args.pid))
