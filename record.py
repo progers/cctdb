@@ -6,6 +6,7 @@ import argparse
 import os
 from subprocess import Popen, PIPE
 import re
+import json
 
 DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
@@ -38,6 +39,8 @@ pidPID:MODULE::entry
 }
 """
 
+# Program is a union for either a running program (with a pid) or
+# a program we need to launch.
 class Program:
     def __init__(self, pid, run):
         if (pid and isinstance(pid, int)):
@@ -108,6 +111,24 @@ def _listModules(program):
     modules = set(row[2] for row in parsed)
     return list(modules)
 
+# Group functionCalls by function and output as a json array.
+def _formatCallsAsJson(functionCalls, function):
+    callsByProbe = [];
+    currentCalls = [];
+    calls = str.splitlines(functionCalls)
+    for call in calls:
+        if (not call or call == ''):
+            continue
+        if (call == function):
+            if (len(currentCalls) > 1):
+                callsByProbe.append(currentCalls)
+            currentCalls = [call]
+        else:
+            currentCalls.append(call)
+    if (len(currentCalls) > 1):
+        callsByProbe.append(currentCalls)
+    return json.dumps(callsByProbe)
+
 # Record the calling context tree.
 # If specified, limit the calling context tree to just code inside 'module' and 'function'
 def _record(program, module, function):
@@ -130,7 +151,7 @@ def _record(program, module, function):
     else:
         additionalArgs = '-p ' + program.pid
     args = additionalArgs + ' -q -n \'' + recordScript + '\''
-    return _dtrace(args)
+    return _formatCallsAsJson(_dtrace(args), function)
 
 def main():
     parser = argparse.ArgumentParser(description='Record a calling context tree.')
