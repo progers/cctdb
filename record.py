@@ -10,24 +10,42 @@ import re
 DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
 DTRACE_RECORD_SCRIPT = """
-int shouldTrace;
+int shouldTraceFunction;
+int stopAfterOneFunction;
 dtrace:::BEGIN
 {
-  shouldTrace = 0;
+  shouldTraceFunction = 0;
+  stopAfterOneFunction = STOPAFTERONE;
 }
 pidPID:MODULE:FUNCTION:entry {
-  shouldTrace = 1;
+  shouldTraceFunction = 1;
 }
-pidPID:MODULE:FUNCTION:return {
-  shouldTrace = 0;
+pidPID:MODULE:FUNCTION:return
+/stopAfterOneFunction == 1/
+{
+  shouldTraceFunction = 0;
   exit(0);
 }
+pidPID:MODULE:FUNCTION:return
+/stopAfterOneFunction == 0/
+{
+  shouldTraceFunction = 0;
+}
 pidPID:MODULE::entry
-/shouldTrace == 1/
+/shouldTraceFunction == 1/
 {
   printf("%s\\n", probefunc);
 }
 """
+
+class Program:
+    def __init__(self, pid, run):
+        if (pid and isinstance(pid, int)):
+            self.launchArgs = ''
+            self.pid = str(pid)
+        else:
+            self.launchArgs = '-c \'' + run + '\''
+            self.pid = '$target'
 
 # Check if a PID is actually running.
 def _pidRunning(pid):
@@ -47,7 +65,8 @@ def _dtrace(args):
             raise Exception('Additional privileges needed. Try running with sudo.')
         if (DTRACE_NOT_FOUND_ERROR in errors):
             raise Exception('Dtrace not found. Try installing dtrace.')
-        raise Exception(errors)
+        if (not output):
+            raise Exception(errors)
     return output
 
 # Parse the dtrace list output of the format: ID PROVIDER MODULE FUNCTION_NAME entry.
@@ -67,67 +86,83 @@ def _parseDtraceEntryList(input):
     return output
 
 # List available modules and functions.
-def _listModulesAndFunctions(pid):
-    args = '-ln "pid' + str(pid) + ':::entry"'
+def _listModulesAndFunctions(program):
+    args = '-ln \'pid' + program.pid + ':::entry\' ' + program.launchArgs
     parsed = _parseDtraceEntryList(_dtrace(args))
     modulesAndFunctions = set(('module(' + row[2] + ') function(' + row[3] + ')') for row in parsed)
     return list(modulesAndFunctions)
 
 # List available functions, optionally filter by module.
-def _listFunctions(pid, module = None):
+def _listFunctions(program, module = None):
     if not module or module == 'list':
         module = ''
-    args = '-ln "pid' + str(pid) + ':' + str(module) + '::entry"'
+    args = '-ln \'pid' + program.pid + ':' + module + '::entry\' ' + program.launchArgs
     parsed = _parseDtraceEntryList(_dtrace(args))
     functions = set(row[3] for row in parsed)
     return list(functions)
 
 # List available modules.
-def _listModules(pid):
-    args = '-ln "pid' + str(pid) + ':::entry"'
+def _listModules(program):
+    args = '-ln \'pid' + program.pid + ':::entry\' ' + program.launchArgs
     parsed = _parseDtraceEntryList(_dtrace(args))
     modules = set(row[2] for row in parsed)
     return list(modules)
 
 # Record the calling context tree.
 # If specified, limit the calling context tree to just code inside 'module' and 'function'
-def _record(pid, module, function):
+def _record(program, module, function):
     if not module or module == 'list':
         module = ''
     if not function or function == 'list':
         function = ''
     recordScript = DTRACE_RECORD_SCRIPT
-    recordScript = recordScript.replace('PID', str(pid))
-    recordScript = recordScript.replace('MODULE', module)
-    recordScript = recordScript.replace('FUNCTION', function)
+    recordScript = recordScript.replace('PID', program.pid)
+    recordScript = recordScript.replace('MODULE', module.replace(':', '?'))
+    recordScript = recordScript.replace('FUNCTION', function.replace(':', '?'))
+    if (program.launchArgs or module == ''):
+        recordScript = recordScript.replace('STOPAFTERONE', '0')
+    else:
+        recordScript = recordScript.replace('STOPAFTERONE', '1')
     recordScript = recordScript.rstrip('\n')
     recordScript = recordScript.replace('\'', '\\\'')
-    args = '-q -p ' + str(pid) + ' -n \'' + recordScript + '\''
+    if (program.launchArgs):
+        additionalArgs = program.launchArgs
+    else:
+        additionalArgs = '-p ' + program.pid
+    args = additionalArgs + ' -q -n \'' + recordScript + '\''
     return _dtrace(args)
 
 def main():
     parser = argparse.ArgumentParser(description='Record a calling context tree.')
-    parser.add_argument('-p', '--pid', type=int, required=True, help='Process ID to record.')
+    parser.add_argument('-r', '--run', help='Program to launch (alternatively, use --pid).')
+    parser.add_argument('-p', '--pid', type=int, help='Process ID to record (alternatively, use --run).')
     parser.add_argument('-f', '--function', help='Function to record, or blank to record all functions (use \'list\' to list functions).')
     parser.add_argument('-m', '--module', help='Module to record (use \'list\' to list modules).')
     args = parser.parse_args()
 
-    if (not _pidRunning(args.pid)):
+    if (not args.pid and not args.run):
+        print "Either --run [program] or --pid [process id] is required."
+        return
+
+    if (args.pid and not _pidRunning(args.pid)):
         print "Process %d is not running" % args.pid
         return
 
+    program = Program(args.pid, args.run)
+
     if (args.module == 'list' and args.function == 'list'):
-        print '\n'.join(_listModulesAndFunctions(args.pid))
+        print '\n'.join(_listModulesAndFunctions(program))
+        return
 
     if (args.module == 'list'):
-        print '\n'.join(_listModules(args.pid))
+        print '\n'.join(_listModules(program))
         return;
 
     if (args.function == 'list'):
-        print '\n'.join(_listFunctions(args.pid, args.module))
-        return;
+        print '\n'.join(_listFunctions(program, args.module))
+        return
 
-    print _record(args.pid, args.module, args.function)
+    print _record(program, args.module, args.function)
 
 if __name__ == "__main__":
     main()
