@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+  #diffoutput {
+    width: 100%;
+    font-size: 10px;
+  }
+</style>
+<link rel="stylesheet" type="text/css" href="jsdifflib/diffview.css"/>
+<script type="text/javascript" src="jsdifflib/diffview.js"></script>
+<script type="text/javascript" src="jsdifflib/difflib.js"></script>
+<script>
+  var a = undefined;
+  var b = undefined;
+
+  window.onload = function() {
+    function checkDone(a, b) { if (a && b) createOptions(a, b); }
+    loadJson('a.json', function(json) { a = json; checkDone(a, b); });
+    loadJson('b.json', function(json) { b = json; checkDone(a, b); });
+  }
+
+  function createOptions(a, b) {
+    // Compute the similarity ratios of every a tree with every b tree.
+    var options = [];
+    a.forEach(function(a, aIndex) {
+      b.forEach(function(b, bIndex) {
+        var sm = new difflib.SequenceMatcher(a[aIndex], b[bIndex]);
+        var ratio = sm.ratio();
+        options.push({aIndex: aIndex, bIndex: bIndex, ratio: ratio});
+      });
+    });
+    options.sort(function(aa, bb) {
+      return bb.ratio - aa.ratio;
+    });
+    var compare = document.getElementById('compare');
+    compare.innerHTML = '';
+    options.forEach(function(option) {
+      var aName = '#' + option.aIndex + ' ' + a[option.aIndex][0] + ' len(' + a[option.aIndex].length + ')';
+      var bName = '#' + option.bIndex + ' ' + b[option.bIndex][0] + ' len(' + b[option.bIndex].length + ')';
+      var name = 'similarity(' + (Math.round(option.ratio*100)/100) + '): ' + aName + ' / ' + bName;
+      var newOption = document.createElement('option');
+      newOption.value = JSON.stringify({aIndex: option.aIndex, bIndex: option.bIndex});
+      newOption.innerText = name;
+      compare.appendChild(newOption);
+    });
+
+    changeDiff();
+  }
+
+  function changeDiff() {
+    var compare = document.getElementById('compare');
+    var value = JSON.parse(compare.value);
+    var base = a[value.aIndex];
+    var newtxt = b[value.bIndex];
+
+    var sm = new difflib.SequenceMatcher(base, newtxt);
+    var opcodes = sm.get_opcodes();
+    var diffoutputdiv = document.getElementById('diffoutput');
+
+    diffoutputdiv.innerHTML = "";
+    var contextSize = document.getElementById('context').value;
+    if (contextSize == -1)
+      contextSize = null;
+
+    diffoutputdiv.appendChild(diffview.buildView({
+      baseTextLines: base,
+      newTextLines: newtxt,
+      opcodes: opcodes,
+      baseTextName: "Left",
+      newTextName: "Right",
+      contextSize: contextSize,
+      viewType: 0
+    }));
+  }
+
+  function loadJson(file, callback) {
+    var xobj = new XMLHttpRequest();
+    xobj.overrideMimeType("application/json");
+    xobj.open('GET', file, true);
+    xobj.onreadystatechange = function() {
+      if (xobj.readyState == 4 && xobj.status == "200") {
+        // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+        callback(JSON.parse(xobj.responseText));
+      }
+    };
+    xobj.send(null);
+  }
+</script>
+</head>
+<body>
+<h2>Calling context tree debugger</h2>
+Compare: <select id="compare" onchange="changeDiff()"></select><br>
+Context: <select id="context" onchange="changeDiff()">
+<option value="-1">Full</option>
+<option value="1">1</option>
+<option value="5">5</option>
+<option value="20">20</option>
+</select><br>
+<div id="diffoutput"></div>
+</body>
+</html>
