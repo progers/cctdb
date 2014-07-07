@@ -138,8 +138,9 @@ def _record(program, module, function):
         function = ''
     recordScript = DTRACE_RECORD_SCRIPT
     recordScript = recordScript.replace('PID', program.pid)
-    recordScript = recordScript.replace('MODULE', module.replace(':', '?'))
-    recordScript = recordScript.replace('FUNCTION', function.replace(':', '?'))
+    # : and , are special characters for dtrace, so swap them with the single-character wildcard.
+    recordScript = recordScript.replace('MODULE', module.replace(':', '?').replace(',', '?'))
+    recordScript = recordScript.replace('FUNCTION', function.replace(':', '?').replace(',', '?'))
     if (program.launchArgs or module == ''):
         recordScript = recordScript.replace('STOPAFTERONE', '0')
     else:
