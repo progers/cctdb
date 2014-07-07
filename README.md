@@ -15,7 +15,7 @@ Tutorial
 ---------
 This is a short walkthrough and there are more detailed examples in the examples folder.
 
-The first step is to find module and function symbols for some high-level entry point in the program (e.g., main()).
+The first step is to find module and function symbols for some high-level entry point in the program (e.g., `main()`).
 ```
 sudo ./record.py -r '[your program]' -m list -f list
 
@@ -24,12 +24,12 @@ module(moduleb) function(foo(int*))
 ...
 ```
 
-We want CCTDB to trace every function call made within main(), and separate groups of function calls if main() is called multiple times.
+We want CCTDB to trace every function call made within `main()`, and separate groups of function calls if `main()` is called multiple times.
 ```
 sudo ./record.py -r '[your program]' -m 'modulea' -f 'main()'
 ```
 
-This will launch your program and trace all function calls in main(), outputting the result as json. You can also capture every function call by omitting -f, attach to existing processes with -p, etc.
+This will launch your program and trace all function calls in `main()`, outputting the result as json. You can also capture every function call by omitting -f, attach to existing processes with -p, etc.
 
 Our goal is to find the difference between two program runs. Use CCTDB to run the program twice, once with known good input and a second time with the bug:
 ```
@@ -39,3 +39,5 @@ sudo ./record.py -r '[your program] badInput' -m 'modulea' -f 'main()' > bad.jso
 ./compare.py -a good.json -b bad.json
 ```
 The compare call will open your default browser with a diff viewer showing where the two runs differed.
+
+![alt text](http://philiprogers.com/cctdbscreenshot2.png "Diff screenshot")
