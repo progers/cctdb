@@ -10,23 +10,23 @@ DTRACE_RECORD_SCRIPT = """
 proc:::start
 /ppid == $target/
 {
-    printf("Warning: process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.\\n");
+  printf("Warning: process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.\\n");
 }
 int shouldTraceFunction;
 dtrace:::BEGIN
 {
-  printf("in begin1!!! %d\\n", pid);
   shouldTraceFunction = 0;
 }
-pid$target:MODULE:FUNCTION:entry {
-  shouldTraceFunction = 1;
+pid$target:MODULE:FUNCTION:entry
+{
+  shouldTraceFunction++;
 }
 pid$target:MODULE:FUNCTION:return
 {
-  shouldTraceFunction = 0;
+  shouldTraceFunction--;
 }
 pid$target:MODULE::entry
-/shouldTraceFunction == 1/
+/shouldTraceFunction >= 1/
 {
   printf("%s\\n", probefunc);
 }
@@ -81,9 +81,17 @@ def listModules(executable, verbose = False):
     modules = set(row[2] for row in parsed)
     return list(modules)
 
+# Record the calling context tree of a specific process.
+def recordProcess(pid, module = None, function = None, verbose = False):
+    return _record('-p ' + str(pid), module, function, verbose)
+
+# Record the calling context tree of a command.
+def recordCommand(command, module = None, function = None, verbose = False):
+    return _record('-c \'' + command + '\'', module, function, verbose)
+
 # Record the calling context tree.
 # If specified, limit the calling context tree to just code inside 'module' and 'function'
-def record(command, module = None, function = None, verbose = False):
+def _record(args, module = None, function = None, verbose = False):
     if not module:
         module = ''
     if not function:
@@ -95,5 +103,5 @@ def record(command, module = None, function = None, verbose = False):
     recordScript = recordScript.rstrip('\n')
     recordScript = recordScript.replace('\'', '\\\'')
 
-    args = '-c \'' + command + '\' -q -n \'' + recordScript + '\''
+    args = args + ' -q -n \'' + recordScript + '\''
     return _dtrace(args, verbose)
