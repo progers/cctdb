@@ -7,24 +7,21 @@ DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
 
 DTRACE_RECORD_SCRIPT = """
+proc:::start
+/ppid == $target/
+{
+    printf("Warning: process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.\\n");
+}
 int shouldTraceFunction;
-int stopAfterOneFunction;
 dtrace:::BEGIN
 {
+  printf("in begin1!!! %d\\n", pid);
   shouldTraceFunction = 0;
-  stopAfterOneFunction = 0;
 }
 pid$target:MODULE:FUNCTION:entry {
   shouldTraceFunction = 1;
 }
 pid$target:MODULE:FUNCTION:return
-/stopAfterOneFunction == 1/
-{
-  shouldTraceFunction = 0;
-  exit(0);
-}
-pid$target:MODULE:FUNCTION:return
-/stopAfterOneFunction == 0/
 {
   shouldTraceFunction = 0;
 }
@@ -97,5 +94,6 @@ def record(command, module = None, function = None, verbose = False):
     recordScript = recordScript.replace('FUNCTION', function.replace(':', '?').replace(',', '?'))
     recordScript = recordScript.rstrip('\n')
     recordScript = recordScript.replace('\'', '\\\'')
+
     args = '-c \'' + command + '\' -q -n \'' + recordScript + '\''
     return _dtrace(args, verbose)
