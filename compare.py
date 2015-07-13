@@ -5,11 +5,16 @@
 import argparse
 import collections
 import dtrace
+import json
+import os.path
 
-def _testOnlyReadFile(file):
+def _loadCallsFile(file):
+    if (not os.path.isfile(file)):
+        raise Exception('File not found: ' + file)
+
     with open (file, "r") as myfile:
         data=myfile.read()
-    return data
+    return json.loads(data)
 
 def _frequency(calls):
     callsList = calls.split('\n')
@@ -17,34 +22,19 @@ def _frequency(calls):
     return len(calls.split('\n'))
 
 def main():
-    parser = argparse.ArgumentParser(description='Compare the calls made by two commands')
-    parser.add_argument('commandA', help='First command to run (use absolute paths, may include args')
-    parser.add_argument('commandB', help='Second command to run (use absolute paths, may include args')
+    parser = argparse.ArgumentParser(description='Compare calls')
+    parser.add_argument('callsFileA', help='Calls file for run A')
+    parser.add_argument('callsFileB', help='Calls file for run B')
     parser.add_argument('-m', '--module', help='Filter by module')
     parser.add_argument('-f', '--function', help='Filter for calls made in a specific function')
     parser.add_argument('--verbose', help='Verbose output', action='store_true')
-    parser.add_argument('--testOnlyCallsA', help='xxxxxx')
-    parser.add_argument('--testOnlyCallsB', help='xxxxxx')
     args = parser.parse_args()
 
-    callsA = None
-    if (args.testOnlyCallsA):
-        callsA = _testOnlyReadFile(args.testOnlyCallsA)
-    else:
-        callsA = dtrace.record(args.commandA, args.module, args.function, args.verbose)
-    #print 'calls made by a: ' + str(_frequency(callsA))
+    callsA = _loadCallsFile(args.callsFileA)
+    callsB = _loadCallsFile(args.callsFileB)
 
-    callsB = None
-    if (args.testOnlyCallsB):
-        callsB = _testOnlyReadFile(args.testOnlyCallsB)
-    else:
-        callsB = dtrace.record(args.commandB, args.module, args.function, args.verbose)
-    #print 'calls made by b: ' + str(_frequency(callsB))
-
-    callsListA = callsA.split('\n')
-    frequencyA = collections.Counter(callsListA)
-    callsListB = callsB.split('\n')
-    frequencyB = collections.Counter(callsListB)
+    frequencyA = collections.Counter(callsA)
+    frequencyB = collections.Counter(callsB)
 
     print "most common A:"
     mostCommonA = frequencyA.most_common(20)

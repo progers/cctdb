@@ -7,7 +7,7 @@
 # blink.sh [content_shell_and_args] [command_to_run_with_renderer_pid]
 #
 # Example:
-# sudo scripts/blink.sh "/Users/pdr/Desktop/chromium/src/out/Debug/Content\ Shell.app/Contents/MacOS/Content\ Shell --renderer-startup-dialog --dump-render-tree about://blank" "./record.py -f 'blink::FrameView::layout()' -m 'libwebcore_shared.dylib' -o testB.txt"
+# sudo scripts/blink.sh "/Users/pdr/Desktop/chromium/src/out/Debug/Content\ Shell.app/Contents/MacOS/Content\ Shell --renderer-startup-dialog --dump-render-tree about://blank" "./record.py -f 'blink::FrameView::layout()' -m 'libwebcore_shared.dylib' -o test.json"
 
 echo "Starting blink renderer..."
 echo "running [$1]"

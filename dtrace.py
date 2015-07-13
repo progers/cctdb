@@ -1,7 +1,8 @@
 # dtrace helper functions
 
-from subprocess import Popen, PIPE
+import json
 import re
+from subprocess import Popen, PIPE
 
 DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
@@ -10,7 +11,7 @@ DTRACE_RECORD_SCRIPT = """
 proc:::start
 /ppid == $target/
 {
-  printf("Warning: process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.\\n");
+  printf("RECORD_WARNINGWarning: process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.\\n");
 }
 int shouldTraceFunction;
 dtrace:::BEGIN
@@ -104,4 +105,17 @@ def _record(args, module = None, function = None, verbose = False):
     recordScript = recordScript.replace('\'', '\\\'')
 
     args = args + ' -q -n \'' + recordScript + '\''
-    return _dtrace(args, verbose)
+    callsString = _dtrace(args, verbose)
+
+    # Format output as a a json array, also extract warnings.
+    calls = [];
+    callsStringList = str.splitlines(callsString)
+    for call in callsStringList:
+        if (not call or call == ''):
+            continue
+        if (call.startswith('RECORD_WARNING')):
+            warning = call.replace('RECORD_WARNING', '')
+            print warning
+            continue
+        calls.append(call)
+    return json.dumps(calls)
