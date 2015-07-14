@@ -8,6 +8,8 @@ DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
 
 DTRACE_JSON_RECORD_SCRIPT = """
+#pragma D option ustackframes=6
+
 proc:::start
 /ppid == $target/
 {
@@ -35,9 +37,47 @@ pid$target:MODULE:FUNCTION:return
 pid$target:MODULE::entry
 /shouldTraceFunction >= 1/
 {
-  printf("{\\"type\\": \\"function\\", \\"name\\": \\"%s\\", \\"timestamp\\": %d},\\n", probefunc, timestamp);
+  printf("{\\"type\\": \\"function\\", \\"name\\": \\"%s\\", \\"timestamp\\": %d, \\"stack\\": DTRACE_BEGIN_STACK", probefunc, timestamp);
+  ustack(6);
+  printf("DTRACE_END_STACK},\\n");
 }
 """
+
+# Ustack helpers are broken on OSX so we can't write a json-formatted ustack. Instead, we emit begin
+# and end stack markers (DTRACE_{BEGIN,END}_STACK) and post-process these into valid json.
+def _convertStacksToJson(data):
+    jsonString = ""
+    currentIdx = 0
+    startStackMarker = 'DTRACE_BEGIN_STACK'
+    endStackMarker = 'DTRACE_END_STACK'
+    startStackMarkerLength = len(startStackMarker)
+    endStackMarkerLength = len(endStackMarker)
+    while True:
+        stackStartIdx = data.find(startStackMarker, currentIdx)
+        if (stackStartIdx == -1):
+            jsonString += data[currentIdx:]
+            break
+
+        # Copy up to the marker
+        jsonString += data[currentIdx:stackStartIdx]
+
+        stackStartIdx += startStackMarkerLength
+        stackEndIdx = data.find(endStackMarker, stackStartIdx)
+        if (stackEndIdx == -1):
+            raise Exception('Error parsing dtrace stacktraces.')
+        stackChunk = data[stackStartIdx:stackEndIdx]
+        stackChunk = stackChunk.lstrip('\n')
+        stackChunk = stackChunk.rstrip('\n') + '"'
+        stackChunk = stackChunk.replace('\n', '",')
+        stackChunk = stackChunk.replace('              ', '"')
+        # Strip non-ascii characters which can occur when dtrace hits very long symbols (over 1024).
+        stackChunk = "".join([i for i in stackChunk if 31 < ord(i) < 127])
+        stackChunk = '[' + stackChunk + ']'
+        jsonString += stackChunk
+
+        currentIdx = stackEndIdx + endStackMarkerLength
+
+    return jsonString
 
 # Run dtrace, returning the output as a string.
 def _dtrace(args, verbose):
@@ -111,7 +151,7 @@ def _record(args, module = None, function = None, verbose = False):
     recordScript = recordScript.replace('\'', '\\\'')
 
     args = args + ' -q -n \'' + recordScript + '\''
-    data = json.loads(_dtrace(args, verbose))
+    data = json.loads(_convertStacksToJson(_dtrace(args, verbose)))
 
     # Remove any recording warnings and print them before passing the data along.
     for i in xrange(len(data) - 1, -1, -1):
