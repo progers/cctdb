@@ -4,6 +4,7 @@
 
 import argparse
 import dtrace
+import json
 
 def main():
     parser = argparse.ArgumentParser(description='Record a calling context tree.')
@@ -28,7 +29,7 @@ def main():
     if result:
         if (args.out):
             outfile = open(args.out, 'w')
-            outfile.write(result)
+            json.dump(result, outfile, sort_keys = False, indent = 2)
             outfile.close()
         else:
             print result

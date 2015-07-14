@@ -19,12 +19,15 @@ eval $1 2>&1 | {
     # Match [19.....cc(131)] Renderer (1952) paused waiting for deb...
     if [[ $line =~ ^\[.+\][[:space:]]Renderer[[:space:]].([0-9]+).*$ ]] ; then
         pid="${BASH_REMATCH[1]}"
-        command="kill -SIGUSR1 $pid"
-        echo "Unpausing renderer by sending SIGUSR1 with command [$command]"
-        eval $command
-        command="$2 -p $pid"
+        command="$2 -p $pid &"
         echo "Found renderer pid ($pid). Running command [$command]"
         eval $command
+
+        command="sleep 0.1 && kill -SIGUSR1 $pid"
+        echo "Unpausing renderer by sending SIGUSR1 with command [$command]"
+        eval $command
+
+        wait
     fi
   done
 }

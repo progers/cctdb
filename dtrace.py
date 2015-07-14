@@ -7,16 +7,22 @@ from subprocess import Popen, PIPE
 DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
 
-DTRACE_RECORD_SCRIPT = """
+DTRACE_JSON_RECORD_SCRIPT = """
 proc:::start
 /ppid == $target/
 {
-  printf("RECORD_WARNINGWarning: process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.\\n");
+  printf("{\\"type\\": \\"warning\\", \\"message\\": \\"Process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.\\"},\\n");
 }
 int shouldTraceFunction;
 dtrace:::BEGIN
 {
   shouldTraceFunction = 0;
+  printf("[\\n{\\"type\\": \\"begin\\", \\"timestamp\\": %d},\\n", timestamp);
+}
+dtrace:::END
+{
+  shouldTraceFunction = 0;
+  printf("{\\"type\\": \\"end\\", \\"timestamp\\": %d}\\n]\\n", timestamp);
 }
 pid$target:MODULE:FUNCTION:entry
 {
@@ -29,7 +35,7 @@ pid$target:MODULE:FUNCTION:return
 pid$target:MODULE::entry
 /shouldTraceFunction >= 1/
 {
-  printf("%s\\n", probefunc);
+  printf("{\\"type\\": \\"function\\", \\"name\\": \\"%s\\", \\"timestamp\\": %d},\\n", probefunc, timestamp);
 }
 """
 
@@ -97,7 +103,7 @@ def _record(args, module = None, function = None, verbose = False):
         module = ''
     if not function:
         function = ''
-    recordScript = DTRACE_RECORD_SCRIPT
+    recordScript = DTRACE_JSON_RECORD_SCRIPT
     # : and , are special characters for dtrace, so swap them with the single-character wildcard.
     recordScript = recordScript.replace('MODULE', module.replace(':', '?').replace(',', '?'))
     recordScript = recordScript.replace('FUNCTION', function.replace(':', '?').replace(',', '?'))
@@ -105,17 +111,14 @@ def _record(args, module = None, function = None, verbose = False):
     recordScript = recordScript.replace('\'', '\\\'')
 
     args = args + ' -q -n \'' + recordScript + '\''
-    callsString = _dtrace(args, verbose)
+    data = json.loads(_dtrace(args, verbose))
 
-    # Format output as a a json array, also extract warnings.
-    calls = [];
-    callsStringList = str.splitlines(callsString)
-    for call in callsStringList:
-        if (not call or call == ''):
+    # Remove any recording warnings and print them before passing the data along.
+    for i in xrange(len(data) - 1, -1, -1):
+        dataType = data[i]["type"]
+        if (not dataType):
             continue
-        if (call.startswith('RECORD_WARNING')):
-            warning = call.replace('RECORD_WARNING', '')
-            print warning
-            continue
-        calls.append(call)
-    return json.dumps(calls)
+        if (dataType == "warning"):
+            print data[i]["message"] + "\n"
+            del data[i]
+    return data
