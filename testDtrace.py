@@ -22,7 +22,7 @@ class TestDtrace(unittest.TestCase):
     def testTrivialCallTreeGeneration(self):
         recording = """
         [
-            {"type": "function", "name": "ignored", "timestamp": 1, "stack": DTRACE_BEGIN_STACK
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
                           module`a()
             DTRACE_END_STACK}
         ]
@@ -30,16 +30,16 @@ class TestDtrace(unittest.TestCase):
         tree = dtrace._convertRecordingToCallTree(recording)
         self.assertEqual(len(tree), 1)
         self.assertEqual(tree[0]["name"], "module`a()")
-        self.assertEqual(len(tree[0]["calls"]), 0)
+        self.assertNotIn("calls", tree[0])
 
     def testSimpleCallTreeGeneration(self):
         recording = """
         [
-            {"type": "function", "name": "ignored", "timestamp": 1, "stack": DTRACE_BEGIN_STACK
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
                           module`a()
                           module`b()
             DTRACE_END_STACK},
-            {"type": "function", "name": "ignored", "timestamp": 2, "stack": DTRACE_BEGIN_STACK
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
                           module`c()
                           module`a()
                           module`b()
@@ -52,35 +52,35 @@ class TestDtrace(unittest.TestCase):
         self.assertEqual(len(tree[0]["calls"]), 1)
         self.assertEqual(len(tree[0]["calls"]), 1)
         self.assertEqual(tree[0]["calls"][0]["name"], "module`c()")
-        self.assertEqual(len(tree[0]["calls"][0]["calls"]), 0)
+        self.assertNotIn("calls", tree[0]["calls"][0])
 
     def testDegenerateCallTreeGeneration(self):
         recording = """
         [
-            {"type": "function", "name": "ignored", "timestamp": 1, "stack": DTRACE_BEGIN_STACK
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
             DTRACE_END_STACK},
-            {"type": "function", "name": "ignored", "timestamp": 2, "stack": DTRACE_BEGIN_STACK
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
                           module`aa()
                           module`bb()
                           module`cc()
             DTRACE_END_STACK},
-            {"type": "function", "name": "ignored", "timestamp": 3, "stack": DTRACE_BEGIN_STACK
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
             DTRACE_END_STACK},
-            {"type": "function", "name": "ignored", "timestamp": 2, "stack": DTRACE_BEGIN_STACK
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
                           module`qq()
                           module`qq()
                           module`aa()
             DTRACE_END_STACK},
-            {"type": "function", "name": "ignored", "timestamp": 3, "stack": DTRACE_BEGIN_STACK
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
             DTRACE_END_STACK}
         ]
         """
         tree = dtrace._convertRecordingToCallTree(recording)
         self.assertEqual(len(tree), 2)
         self.assertEqual(tree[0]["name"], "module`aa()")
-        self.assertEqual(len(tree[0]["calls"]), 0)
+        self.assertNotIn("calls", tree[0])
         self.assertEqual(tree[1]["name"], "module`qq()")
-        self.assertEqual(len(tree[1]["calls"]), 0)
+        self.assertNotIn("calls", tree[1])
 
 if __name__ == '__main__':
     unittest.main()

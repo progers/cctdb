@@ -7,24 +7,26 @@ from subprocess import Popen, PIPE
 DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
 
+RECORD_FORKED_PROCESS_WARNING = 'Process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.'
+
 DTRACE_RECORD_SCRIPT = """
 #pragma D option ustackframes=6
 
 proc:::start
 /ppid == $target/
 {
-  printf("{\\"type\\": \\"warning\\", \\"message\\": \\"Process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.\\"},\\n");
+  printf("{\\"type\\": \\"warning\\", \\"message\\": \\"RECORD_FORKED_PROCESS_WARNING\\"},\\n");
 }
 int shouldTraceFunction;
 dtrace:::BEGIN
 {
   shouldTraceFunction = 0;
-  printf("[\\n{\\"type\\": \\"begin\\", \\"timestamp\\": %d},\\n", timestamp);
+  printf("[\\n{\\"type\\": \\"begin\\"},\\n");
 }
 dtrace:::END
 {
   shouldTraceFunction = 0;
-  printf("{\\"type\\": \\"end\\", \\"timestamp\\": %d}\\n]\\n", timestamp);
+  printf("{\\"type\\": \\"end\\"}\\n]\\n");
 }
 pid$target:MODULE:FUNCTION:entry
 {
@@ -37,7 +39,7 @@ pid$target:MODULE:FUNCTION:return
 pid$target:MODULE::entry
 /shouldTraceFunction >= 1/
 {
-  printf("{\\"type\\": \\"function\\", \\"name\\": \\"%s\\", \\"timestamp\\": %d, \\"stack\\": DTRACE_BEGIN_STACK", probefunc, timestamp);
+  printf("{\\"type\\": \\"fn\\", \\"stack\\": DTRACE_BEGIN_STACK");
   ustack(6);
   printf("DTRACE_END_STACK},\\n");
 }
@@ -46,6 +48,9 @@ pid$target:MODULE::entry
 # Ustack helpers are broken on OSX so we can't write a json-formatted ustack. Instead, we emit begin
 # and end stack markers (DTRACE_{BEGIN,END}_STACK) and post-process these to json in this function.
 def _convertStacksToJson(recording):
+    # TESTING ONLY
+    #print recording
+
     jsonString = ""
     currentIdx = 0
     startStackMarker = 'DTRACE_BEGIN_STACK'
@@ -87,10 +92,13 @@ def _convertStacksToJson(recording):
 def _convertRecordingToCallTree(recording):
     recording = json.loads(_convertStacksToJson(recording))
 
+    # TESTING ONLY
+    #print json.dumps(recording, sort_keys = False, indent = 2)
+
     # Assign a depth to each call.
     stack = []
     for fnCall in recording:
-        if (fnCall["type"] != "function"):
+        if (fnCall["type"] != "fn"):
             continue
         if (not "stack" in fnCall):
             continue
@@ -119,17 +127,21 @@ def _convertRecordingToCallTree(recording):
     # Convert fnCall depths into a tree.
     callsTree = []
     for fnCall in recording:
-        if (fnCall["type"] != "function"):
+        if (fnCall["type"] != "fn"):
             continue
         if (not "depth" in fnCall):
             continue
         depth = fnCall["depth"]
         calls = callsTree
         for d in range(0, depth):
+            if (not "calls" in calls[-1]):
+                calls[-1]["calls"] = []
             calls = calls[-1]["calls"]
         newCall = {}
         newCall["name"] = fnCall["stack"][0]
-        newCall["calls"] = []
+        # TESTING ONLY
+        #if (depth == 0):
+        #    newCall["fnCall"] = fnCall
         calls.append(newCall)
     return callsTree
 
@@ -205,14 +217,9 @@ def _record(args, module = None, function = None, verbose = False):
     recordScript = recordScript.replace('\'', '\\\'')
 
     args = args + ' -q -n \'' + recordScript + '\''
-    data = json.loads(_convertStacksToJson(_dtrace(args, verbose)))
+    recording = _dtrace(args, verbose)
 
-    # Remove any recording warnings and print them before passing the data along.
-    for i in xrange(len(data) - 1, -1, -1):
-        dataType = data[i]["type"]
-        if (not dataType):
-            continue
-        if (dataType == "warning"):
-            print data[i]["message"] + "\n"
-            del data[i]
-    return data
+    if ('RECORD_FORKED_PROCESS_WARNING' in recording):
+        print RECORD_FORKED_PROCESS_WARNING
+
+    return _convertRecordingToCallTree(recording)
