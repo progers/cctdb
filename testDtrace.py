@@ -50,7 +50,6 @@ class TestDtrace(unittest.TestCase):
         self.assertEqual(len(tree), 1)
         self.assertEqual(tree[0]["name"], "module`a()")
         self.assertEqual(len(tree[0]["calls"]), 1)
-        self.assertEqual(len(tree[0]["calls"]), 1)
         self.assertEqual(tree[0]["calls"][0]["name"], "module`c()")
         self.assertNotIn("calls", tree[0]["calls"][0])
 
@@ -69,7 +68,7 @@ class TestDtrace(unittest.TestCase):
             {"type": "fn", "stack": DTRACE_BEGIN_STACK
                           module`qq()
                           module`qq()
-                          module`aa()
+                          module`zz()
             DTRACE_END_STACK},
             {"type": "fn", "stack": DTRACE_BEGIN_STACK
             DTRACE_END_STACK}
@@ -81,6 +80,37 @@ class TestDtrace(unittest.TestCase):
         self.assertNotIn("calls", tree[0])
         self.assertEqual(tree[1]["name"], "module`qq()")
         self.assertNotIn("calls", tree[1])
+
+    def testCallTreeGenerationErrorHandling(self):
+        recording = """
+        [
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
+                          module`a()
+            DTRACE_END_STACK},
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
+                          module`b()
+                          module`a()
+            DTRACE_END_STACK},
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
+                          module`c()
+                          module`b()
+                          module`a()
+            DTRACE_END_STACK},
+            {"type": "fn", "stack": DTRACE_BEGIN_STACK
+                          module`e()
+                          module`d()
+                          module`c()
+                          module`b()
+                          module`a()
+            DTRACE_END_STACK}
+        ]
+        """
+        tree = dtrace._convertRecordingToCallTree(recording)
+        self.assertEqual(len(tree), 1)
+        self.assertEqual(tree[0]["name"], "module`a()")
+        self.assertEqual(tree[0]["calls"][0]["name"], "module`b()")
+        self.assertEqual(tree[0]["calls"][0]["calls"][0]["name"], "module`c()")
+        self.assertEqual(tree[0]["calls"][0]["calls"][0]["calls"][0]["name"], "module`e()")
 
 if __name__ == '__main__':
     unittest.main()

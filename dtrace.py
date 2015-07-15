@@ -10,7 +10,7 @@ DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
 RECORD_FORKED_PROCESS_WARNING = 'Process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.'
 
 DTRACE_RECORD_SCRIPT = """
-#pragma D option ustackframes=6
+#pragma D option ustackframes=24
 
 proc:::start
 /ppid == $target/
@@ -40,7 +40,7 @@ pid$target:MODULE::entry
 /shouldTraceFunction >= 1/
 {
   printf("{\\"type\\": \\"fn\\", \\"stack\\": DTRACE_BEGIN_STACK");
-  ustack(6);
+  ustack();
   printf("DTRACE_END_STACK},\\n");
 }
 """
@@ -48,9 +48,6 @@ pid$target:MODULE::entry
 # Ustack helpers are broken on OSX so we can't write a json-formatted ustack. Instead, we emit begin
 # and end stack markers (DTRACE_{BEGIN,END}_STACK) and post-process these to json in this function.
 def _convertStacksToJson(recording):
-    # TESTING ONLY
-    #print recording
-
     jsonString = ""
     currentIdx = 0
     startStackMarker = 'DTRACE_BEGIN_STACK'
@@ -88,14 +85,30 @@ def _convertStacksToJson(recording):
 
     return jsonString
 
+# Given a partial stack, do a best-effort calculation for the final depth of the partial stack.
+def _calculateFrameDepth(completeStack, nextFramePartialStack):
+    # Make a copy because it will be modified
+    stack = completeStack[:]
+    while (True):
+        stackLength = len(stack)
+        framesToCheck = min(stackLength, len(nextFramePartialStack) - 1)
+        stacksMatch = True
+        for frameIdx in range(0, framesToCheck):
+            if (nextFramePartialStack[frameIdx + 1] != stack[stackLength - frameIdx - 1]):
+                stacksMatch = False
+                break
+        if (stacksMatch):
+            return stackLength
+        elif (stackLength == 0):
+            return 0
+        # Pop up a frame and try again
+        stack.pop()
+
 # Convert a list of function calls with stacks into a tree.
 def _convertRecordingToCallTree(recording):
     recording = json.loads(_convertStacksToJson(recording))
 
-    # TESTING ONLY
-    #print json.dumps(recording, sort_keys = False, indent = 2)
-
-    # Assign a depth to each call.
+    callsTree = []
     stack = []
     for fnCall in recording:
         if (fnCall["type"] != "fn"):
@@ -105,33 +118,22 @@ def _convertRecordingToCallTree(recording):
         fnStack = fnCall["stack"]
         if (len(fnStack) == 0):
             continue
-        fnName = fnStack[0]
-
-        while (True):
-            stackLength = len(stack)
-            framesToCheck = min(stackLength, len(fnStack) - 1)
-            stacksMatch = True
-            for frameIdx in range(0, framesToCheck):
-                if (fnStack[frameIdx + 1] != stack[stackLength - frameIdx - 1]):
-                    stacksMatch = False
+        depth = _calculateFrameDepth(stack, fnStack)
+        if (depth == 0):
+            # utrace() will occasionally jump from a stack of [a, b, c] to [a, b, c, d, e],
+            # possibly due to issues rewinding RVO or inlined functions. Before assuming a
+            # stack forms a new top-level call, check to see if the tree makes sense if
+            # we assume up to N skipped frames. This should be lower than ustackframes in the
+            # recording script.
+            MAX_SKIPPED_STACK_FRAMES = 12
+            for skippedFrames in range(1, min(MAX_SKIPPED_STACK_FRAMES, len(fnStack)-1)):
+                depth = _calculateFrameDepth(stack, fnStack[skippedFrames:])
+                if (depth > 0):
+                    # Pretend the lower frames never happened.
+                    fnStack = fnStack[skippedFrames:]
                     break
-            if (stacksMatch):
-                fnCall["depth"] = stackLength
-                stack.append(fnStack[0])
-                break
-            elif (stackLength == 0):
-                break;
-            # Pop up a frame and try again
-            stack.pop()
-
-    # Convert fnCall depths into a tree.
-    callsTree = []
-    for fnCall in recording:
-        if (fnCall["type"] != "fn"):
-            continue
-        if (not "depth" in fnCall):
-            continue
-        depth = fnCall["depth"]
+        stack = stack[: depth]
+        stack.append(fnStack[0])
         calls = callsTree
         for d in range(0, depth):
             if (not "calls" in calls[-1]):
@@ -139,9 +141,6 @@ def _convertRecordingToCallTree(recording):
             calls = calls[-1]["calls"]
         newCall = {}
         newCall["name"] = fnCall["stack"][0]
-        # TESTING ONLY
-        #if (depth == 0):
-        #    newCall["fnCall"] = fnCall
         calls.append(newCall)
     return callsTree
 
