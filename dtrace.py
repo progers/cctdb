@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE
 DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
 
-DTRACE_JSON_RECORD_SCRIPT = """
+DTRACE_RECORD_SCRIPT = """
 #pragma D option ustackframes=6
 
 proc:::start
@@ -44,8 +44,8 @@ pid$target:MODULE::entry
 """
 
 # Ustack helpers are broken on OSX so we can't write a json-formatted ustack. Instead, we emit begin
-# and end stack markers (DTRACE_{BEGIN,END}_STACK) and post-process these into valid json.
-def _convertStacksToJson(data):
+# and end stack markers (DTRACE_{BEGIN,END}_STACK) and post-process these to json in this function.
+def _convertStacksToJson(recording):
     jsonString = ""
     currentIdx = 0
     startStackMarker = 'DTRACE_BEGIN_STACK'
@@ -53,31 +53,85 @@ def _convertStacksToJson(data):
     startStackMarkerLength = len(startStackMarker)
     endStackMarkerLength = len(endStackMarker)
     while True:
-        stackStartIdx = data.find(startStackMarker, currentIdx)
+        stackStartIdx = recording.find(startStackMarker, currentIdx)
         if (stackStartIdx == -1):
-            jsonString += data[currentIdx:]
+            jsonString += recording[currentIdx:]
             break
 
         # Copy up to the marker
-        jsonString += data[currentIdx:stackStartIdx]
+        jsonString += recording[currentIdx:stackStartIdx]
 
         stackStartIdx += startStackMarkerLength
-        stackEndIdx = data.find(endStackMarker, stackStartIdx)
+        stackEndIdx = recording.find(endStackMarker, stackStartIdx)
         if (stackEndIdx == -1):
             raise Exception('Error parsing dtrace stacktraces.')
-        stackChunk = data[stackStartIdx:stackEndIdx]
-        stackChunk = stackChunk.lstrip('\n')
-        stackChunk = stackChunk.rstrip('\n') + '"'
-        stackChunk = stackChunk.replace('\n', '",')
-        stackChunk = stackChunk.replace('              ', '"')
-        # Strip non-ascii characters which can occur when dtrace hits very long symbols (over 1024).
-        stackChunk = "".join([i for i in stackChunk if 31 < ord(i) < 127])
-        stackChunk = '[' + stackChunk + ']'
-        jsonString += stackChunk
-
+        stackChunk = recording[stackStartIdx:stackEndIdx]
+        stackChunk = stackChunk.strip()
+        unparsedStack = stackChunk.split('\n') if len(stackChunk) > 0 else []
+        parsedStack = []
+        for call in unparsedStack:
+            call = call.strip()
+            # Strip the function call offset (e.g., functionName+0x123 -> functionName).
+            offsetSeparatorIdx = call.find('+')
+            if (offsetSeparatorIdx != -1):
+                call = call[: offsetSeparatorIdx]
+            # Strip non-ascii characters which can occur when dtrace overflows.
+            call = "".join([i for i in call if 31 < ord(i) < 127])
+            parsedStack.append('"' + call + '"')
+        jsonString += '[' + ','.join(parsedStack) + ']'
         currentIdx = stackEndIdx + endStackMarkerLength
 
     return jsonString
+
+# Convert a list of function calls with stacks into a tree.
+def _convertRecordingToCallTree(recording):
+    recording = json.loads(_convertStacksToJson(recording))
+
+    # Assign a depth to each call.
+    stack = []
+    for fnCall in recording:
+        if (fnCall["type"] != "function"):
+            continue
+        if (not "stack" in fnCall):
+            continue
+        fnStack = fnCall["stack"]
+        if (len(fnStack) == 0):
+            continue
+        fnName = fnStack[0]
+
+        while (True):
+            stackLength = len(stack)
+            framesToCheck = min(stackLength, len(fnStack) - 1)
+            stacksMatch = True
+            for frameIdx in range(0, framesToCheck):
+                if (fnStack[frameIdx + 1] != stack[stackLength - frameIdx - 1]):
+                    stacksMatch = False
+                    break
+            if (stacksMatch):
+                fnCall["depth"] = stackLength
+                stack.append(fnStack[0])
+                break
+            elif (stackLength == 0):
+                break;
+            # Pop up a frame and try again
+            stack.pop()
+
+    # Convert fnCall depths into a tree.
+    callsTree = []
+    for fnCall in recording:
+        if (fnCall["type"] != "function"):
+            continue
+        if (not "depth" in fnCall):
+            continue
+        depth = fnCall["depth"]
+        calls = callsTree
+        for d in range(0, depth):
+            calls = calls[-1]["calls"]
+        newCall = {}
+        newCall["name"] = fnCall["stack"][0]
+        newCall["calls"] = []
+        calls.append(newCall)
+    return callsTree
 
 # Run dtrace, returning the output as a string.
 def _dtrace(args, verbose):
@@ -143,7 +197,7 @@ def _record(args, module = None, function = None, verbose = False):
         module = ''
     if not function:
         function = ''
-    recordScript = DTRACE_JSON_RECORD_SCRIPT
+    recordScript = DTRACE_RECORD_SCRIPT
     # : and , are special characters for dtrace, so swap them with the single-character wildcard.
     recordScript = recordScript.replace('MODULE', module.replace(':', '?').replace(',', '?'))
     recordScript = recordScript.replace('FUNCTION', function.replace(':', '?').replace(',', '?'))
