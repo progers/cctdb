@@ -1,4 +1,6 @@
-# dtrace helper functions
+# Dtrace script for generating calling context trees (CCT).
+#
+# Dtrace has various issues on OSX which make this approach to generating CCTs a little messy.
 
 import json
 import re
@@ -9,8 +11,10 @@ DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
 
 RECORD_FORKED_PROCESS_WARNING = 'Process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.'
 
+# dtrace script to print a stack trace at every function call in almost-json format
+# (see _convertStacksToJson).
 DTRACE_RECORD_SCRIPT = """
-#pragma D option ustackframes=24
+#pragma D option ustackframes=32
 
 proc:::start
 /ppid == $target/
@@ -77,7 +81,7 @@ def _convertStacksToJson(recording):
             offsetSeparatorIdx = call.find('+')
             if (offsetSeparatorIdx != -1):
                 call = call[: offsetSeparatorIdx]
-            # Strip non-ascii characters which can occur when dtrace overflows.
+            # Strip non-ascii characters which can occur when dtrace overflows on long names.
             call = "".join([i for i in call if 31 < ord(i) < 127])
             parsedStack.append('"' + call + '"')
         jsonString += '[' + ','.join(parsedStack) + ']'
@@ -86,6 +90,8 @@ def _convertStacksToJson(recording):
     return jsonString
 
 # Given a partial stack, do a best-effort calculation for the final depth of the partial stack.
+# For example: Given the complete stack [main(), myFun(), printHappy()] and the partial stack
+#              [myFun(), printHappy()], we can compute the depth of printHappy() as 3 deep.
 def _calculateFrameDepth(completeStack, nextFramePartialStack):
     # Make a copy because it will be modified
     stack = completeStack[:]
@@ -120,7 +126,7 @@ def _convertRecordingToCallTree(recording):
             continue
         depth = _calculateFrameDepth(stack, fnStack)
         if (depth == 0):
-            # utrace() will occasionally jump from a stack of [a, b, c] to [a, b, c, d, e],
+            # utrace() will occasionally jump from a stack of [a, b, c] to [a, b, c, d, e, f],
             # possibly due to issues rewinding RVO or inlined functions. Before assuming a
             # stack forms a new top-level call, check to see if the tree makes sense if
             # we assume up to N skipped frames. This should be lower than ustackframes in the
@@ -129,7 +135,7 @@ def _convertRecordingToCallTree(recording):
             for skippedFrames in range(1, min(MAX_SKIPPED_STACK_FRAMES, len(fnStack)-1)):
                 depth = _calculateFrameDepth(stack, fnStack[skippedFrames:])
                 if (depth > 0):
-                    # Pretend the lower frames never happened.
+                    # Pretend the lower frames (e.g., 'e', 'f') never happened.
                     fnStack = fnStack[skippedFrames:]
                     break
         stack = stack[: depth]
@@ -140,7 +146,7 @@ def _convertRecordingToCallTree(recording):
                 calls[-1]["calls"] = []
             calls = calls[-1]["calls"]
         newCall = {}
-        newCall["name"] = fnCall["stack"][0]
+        newCall["name"] = fnStack[0]
         calls.append(newCall)
     return callsTree
 

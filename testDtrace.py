@@ -82,6 +82,8 @@ class TestDtrace(unittest.TestCase):
         self.assertNotIn("calls", tree[1])
 
     def testCallTreeGenerationErrorHandling(self):
+        # Dtrace will sometimes skip intermediate frames and jump from [a, b, c] to [a, b, c, d, e].
+        # This test makes sure we do something sensible--in this case just emit [a, b, c, d].
         recording = """
         [
             {"type": "fn", "stack": DTRACE_BEGIN_STACK
@@ -110,7 +112,7 @@ class TestDtrace(unittest.TestCase):
         self.assertEqual(tree[0]["name"], "module`a()")
         self.assertEqual(tree[0]["calls"][0]["name"], "module`b()")
         self.assertEqual(tree[0]["calls"][0]["calls"][0]["name"], "module`c()")
-        self.assertEqual(tree[0]["calls"][0]["calls"][0]["calls"][0]["name"], "module`e()")
+        self.assertEqual(tree[0]["calls"][0]["calls"][0]["calls"][0]["name"], "module`d()")
 
 if __name__ == '__main__':
     unittest.main()

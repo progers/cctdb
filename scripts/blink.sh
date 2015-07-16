@@ -7,7 +7,7 @@
 # blink.sh [content_shell_and_args] [command_to_run_with_renderer_pid]
 #
 # Example:
-# sudo scripts/blink.sh "/Users/pdr/Desktop/chromium/src/out/Debug/Content\ Shell.app/Contents/MacOS/Content\ Shell --renderer-startup-dialog --dump-render-tree about://blank" "./record.py -f 'blink::FrameView::layout()' -m 'libwebcore_shared.dylib' -o test.json"
+# sudo scripts/blink.sh "/Users/pdr/Desktop/chromium/src/out/Release/Content\ Shell.app/Contents/MacOS/Content\ Shell --renderer-startup-dialog --dump-render-tree about://blank" "./record.py -f 'blink::FrameView::layout()' -m 'libwebcore_shared.dylib' -o test.json"
 
 echo "Starting blink renderer..."
 echo "running [$1]"
@@ -23,7 +23,9 @@ eval $1 2>&1 | {
         echo "Found renderer pid ($pid). Running command [$command]"
         eval $command
 
-        command="sleep 0.3 && kill -SIGUSR1 $pid"
+        # Super hacky. We start dtrace on the renderer in a stopped state in the background
+        # then wait 1.3s and kick the renderer. Hope 1.3s enough for dtrace to init!
+        command="sleep 1.3 && kill -SIGUSR1 $pid"
         echo "Unpausing renderer by sending SIGUSR1 with command [$command]"
         eval $command
 

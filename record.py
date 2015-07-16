@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# record.py - List all function calls made by an command.
+# record.py - List a calling context tree.
 
 import argparse
 import dtrace
@@ -23,7 +23,7 @@ def main():
     elif (args.pid):
         result = dtrace.recordProcess(args.pid, args.module, args.function, args.verbose)
     else:
-        print "Must specify either --command [command] or --process"
+        print "Must specify either --command or --pid"
         return
 
     if result:
