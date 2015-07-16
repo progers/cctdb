@@ -23,7 +23,7 @@ eval $1 2>&1 | {
         echo "Found renderer pid ($pid). Running command [$command]"
         eval $command
 
-        command="sleep 0.1 && kill -SIGUSR1 $pid"
+        command="sleep 0.3 && kill -SIGUSR1 $pid"
         echo "Unpausing renderer by sending SIGUSR1 with command [$command]"
         eval $command
 
