@@ -5,6 +5,15 @@ import unittest
 
 class TestDtrace(unittest.TestCase):
 
+    def testParseEntryList(self):
+        sample = """   ID   PROVIDER   MODULE         FUNCTION NAME
+                     3169   pid33494   testModule1    testFunction1 with spaces entry
+                     3170   pid33494   testModule2    testFunction2_with8#@9%$#$^* entry"""
+        expected = [
+            ['3169', 'pid33494', 'testModule1', 'testFunction1 with spaces'],
+            ['3170', 'pid33494', 'testModule2', 'testFunction2_with8#@9%$#$^*']]
+        self.assertEqual(dtrace._parseEntryList(sample), expected)
+
     def testConvertStacksToJson(self):
         self.assertEqual(dtrace._convertStacksToJson("foobarbaz"), "foobarbaz")
 
