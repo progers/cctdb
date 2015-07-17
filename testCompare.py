@@ -33,14 +33,14 @@ class TestCompare(unittest.TestCase):
         tree = self._simpleRootedTestTree()
 
         # Empty call list has no matches.
-        self.assertFalse(compare._hasMatchingCallList([], [tree]))
+        self.assertEqual(compare._hasMatchingCallList([], [tree]), compare.CallListMatchType.NOMATCH)
 
-        self.assertTrue(compare._hasMatchingCallList([tree], [tree]))
-        self.assertTrue(compare._hasMatchingCallList([tree, tree["calls"][0]], [tree]))
-        self.assertTrue(compare._hasMatchingCallList([tree, tree["calls"][0], tree["calls"][0]["calls"][0]], [tree]))
+        self.assertNotEqual(compare._hasMatchingCallList([tree], [tree]), compare.CallListMatchType.NOMATCH)
+        self.assertNotEqual(compare._hasMatchingCallList([tree, tree["calls"][0]], [tree]), compare.CallListMatchType.NOMATCH)
+        self.assertNotEqual(compare._hasMatchingCallList([tree, tree["calls"][0], tree["calls"][0]["calls"][0]], [tree]), compare.CallListMatchType.NOMATCH)
 
         # Test a call list that doesn't exist.
-        self.assertFalse(compare._hasMatchingCallList([tree, tree["calls"][0], tree["calls"][0]["calls"][0], tree["calls"][0]], [tree]))
+        self.assertEqual(compare._hasMatchingCallList([tree, tree["calls"][0], tree["calls"][0]["calls"][0], tree["calls"][0]], [tree]), compare.CallListMatchType.NOMATCH)
 
     def testTrivialTreeDivergences(self):
         tree = self._simpleRootedTestTree()
@@ -63,51 +63,56 @@ class TestCompare(unittest.TestCase):
         self.assertEqual(len(divergences), 1)
         self.assertEqual(divergences[0], ['begin', 'fn1()', 'fn2()', 'newFn()'])
 
-    #def testDuplicateCallCountDivergences(self):
-    #    treeA = self._simpleTestTree()
-    #    treeB = self._simpleTestTree()
-    #    secondFunctionAgain = {}
-    #    secondFunctionAgain["name"] = "fn2()"
-    #    treeB[0]["calls"].append(secondFunctionAgain)
+    def testDuplicateDivergences(self):
+        treeA = self._simpleRootedTestTree()
+        treeB = self._simpleRootedTestTree()
+        secondFunctionAgain = {}
+        secondFunctionAgain["name"] = "fn2()"
+        treeB["calls"][0]["calls"].append(secondFunctionAgain)
 
-    #    # All calls in A are in B.
-    #    self.assertEqual(compare._findStackDivergences(treeA, treeB, treeA), [])
+        # All calls in A are in B.
+        self.assertEqual(compare._findTreeDivergences(treeA, treeB), [])
 
-    #    # Not all calls in B are in A--there are two fn1->fn2's in B but only one in A.
-    #    self.assertEqual(compare._findStackDivergences(treeB, treeA, treeB), [['fn1()', 'fn2()']])
+        # Not all calls in B are in A--there are two fn1->fn2's in B but only one in A.
+        self.assertEqual(compare._findTreeDivergences(treeB, treeA), [['begin', 'fn1()', 'fn2()'], ['begin', 'fn1()', 'fn2()']])
 
+    def testSubtreeCallCounts(self):
+        # Tree where fn2 and fn3 are both called from fn1.
+        treeA = {}
+        treeA["name"] = "begin"
+        treeA["calls"] = []
+        aFirstCall = {}
+        aFirstCall["name"] = "fn1()"
+        aFirstCall["calls"] = []
+        treeA["calls"].append(aFirstCall)
+        aSecondCall = {}
+        aSecondCall["name"] = "fn2()"
+        aFirstCall["calls"].append(aSecondCall)
+        aThirdCall = {}
+        aThirdCall["name"] = "fn3()"
+        aFirstCall["calls"].append(aThirdCall)
 
-    #def testSubtreeConsistency(self):
-    #    # Tree where fn2 and fn3 are both called from fn1.
-    #    treeA = [];
-    #    aFirstCall = {}
-    #    aFirstCall["name"] = "fn1()"
-    #    aFirstCall["calls"] = []
-    #    treeA.append(aFirstCall)
-    #    aSecondCall = {}
-    #    aSecondCall["name"] = "fn2()"
-    #    aFirstCall["calls"].append(aSecondCall)
-    #    aThirdCall = {}
-    #    aThirdCall["name"] = "fn3()"
-    #    aFirstCall["calls"].append(aThirdCall)
+        # Tree where fn1 is called twice. The first call to fn1 calls fn2. The second call to fn1 calls fn3.
+        treeB = {}
+        treeB["name"] = "begin"
+        treeB["calls"] = []
+        bFirstCall = {}
+        bFirstCall["name"] = "fn1()"
+        treeB["calls"].append(bFirstCall)
+        bSecondCall = {}
+        bSecondCall["name"] = "fn2()"
+        bFirstCall["calls"] = [bSecondCall]
+        bThirdCall = {}
+        bThirdCall["name"] = "fn1()"
+        treeB["calls"].append(bThirdCall)
+        bFourthCall = {}
+        bFourthCall["name"] = "fn3()"
+        bThirdCall["calls"] = [bFourthCall]
 
-    #    # Tree where fn1 is called twice. The first call to fn1 calls fn2. The second call to fn1 calls fn3.
-    #    treeB = [];
-    #    bFirstCall = {}
-    #    bFirstCall["name"] = "fn1()"
-    #    treeB.append(bFirstCall)
-    #    bSecondCall = {}
-    #    bSecondCall["name"] = "fn2()"
-    #    bFirstCall["calls"] = [bSecondCall]
-    #    bThirdCall = {}
-    #    bThirdCall["name"] = "fn1()"
-    #    treeB.append(bThirdCall)
-    #    bFourthCall = {}
-    #    bFourthCall["name"] = "fn3()"
-    #    bThirdCall["calls"] = [bFourthCall]
+        self.assertEqual(compare._findTreeDivergences(treeB, treeA), [['begin', 'fn1()'], ['begin', 'fn1()']])
 
-    #    self.assertNotEqual(compare._findStackDivergences(treeA, treeB, treeA), [])
-    #    self.assertNotEqual(compare._findStackDivergences(treeB, treeA, treeB), [])
+        # This is incorrect but we say that A can be built by B, not vice-versa.
+        self.assertEqual(compare._findTreeDivergences(treeA, treeB), [])
 
 if __name__ == '__main__':
     unittest.main()
