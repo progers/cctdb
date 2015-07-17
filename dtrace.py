@@ -111,6 +111,8 @@ def _calculateFrameDepth(completeStack, nextFramePartialStack):
         stack.pop()
 
 # Convert a list of function calls with stacks into a tree.
+# If there are multiple calls to the program's entry point (or, if function filtering was used),
+# the returned tree will be a list of subtrees.
 def _convertRecordingToCallTree(recording):
     recording = json.loads(_convertStacksToJson(recording))
 

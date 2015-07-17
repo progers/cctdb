@@ -19,39 +19,49 @@ class TestCompare(unittest.TestCase):
         calls.append(thirdCall)
         return calls # sometimes :/
 
+    def _simpleRootedTestTree(self):
+        tree = {}
+        tree["name"] = "begin"
+        tree["calls"] = self._simpleTestTree()
+        return tree
+
     def testCallCount(self):
-        tree = self._simpleTestTree()
+        tree = self._simpleRootedTestTree()
         self.assertEqual(compare._callCount(tree), 3)
 
-    def testStackExistsInCallTree(self):
-        tree = self._simpleTestTree()
-        self.assertTrue(compare._stackExistsInCallTree(tree, ["fn1()"]))
-        self.assertTrue(compare._stackExistsInCallTree(tree, ["fn3()"]))
-        self.assertFalse(compare._stackExistsInCallTree(tree, ["fn2()"]))
-        self.assertTrue(compare._stackExistsInCallTree(tree, ["fn1()", "fn2()"]))
-        self.assertFalse(compare._stackExistsInCallTree(tree, ["fn1()", "fn3()"]))
-        self.assertFalse(compare._stackExistsInCallTree(tree, ["fn1()", "fnDNE()"]))
+    def testHasMatchingCallList(self):
+        tree = self._simpleRootedTestTree()
 
-    def testTrivialStackDivergences(self):
-        treeA = self._simpleTestTree()
+        # Empty call list has no matches.
+        self.assertFalse(compare._hasMatchingCallList([], [tree]))
+
+        self.assertTrue(compare._hasMatchingCallList([tree], [tree]))
+        self.assertTrue(compare._hasMatchingCallList([tree, tree["calls"][0]], [tree]))
+        self.assertTrue(compare._hasMatchingCallList([tree, tree["calls"][0], tree["calls"][0]["calls"][0]], [tree]))
+
+        # Test a call list that doesn't exist.
+        self.assertFalse(compare._hasMatchingCallList([tree, tree["calls"][0], tree["calls"][0]["calls"][0], tree["calls"][0]], [tree]))
+
+    def testTrivialTreeDivergences(self):
+        tree = self._simpleRootedTestTree()
         # Tree does not diverge from itself.
-        self.assertEqual(compare._findStackDivergences(treeA, treeA, treeA), [])
+        self.assertEqual(compare._findTreeDivergences(tree, tree), [])
 
-        # Empty trees do not diverge.
-        self.assertEqual(compare._findStackDivergences([], [], []), [])
-
-    def testSimpleStackDivergences(self):
-        treeA = self._simpleTestTree()
-        treeB = self._simpleTestTree()
+    def testSimpleTreeDivergences(self):
+        treeA = self._simpleRootedTestTree()
+        treeB = self._simpleRootedTestTree()
         newCall = {}
         newCall["name"] = "newFn()"
-        treeB[0]["calls"][0]["calls"] = [newCall]
+        treeB["calls"][0]["calls"][0]["calls"] = [newCall]
 
         # All calls in A are in B.
-        self.assertEqual(compare._findStackDivergences(treeA, treeB, treeA), [])
+        divergences = compare._findTreeDivergences(treeA, treeB)
+        self.assertEqual(len(divergences), 0)
 
         # Not all calls in B are in A--newFn is not in A.
-        self.assertEqual(compare._findStackDivergences(treeB, treeA, treeB), [['fn1()', 'fn2()', 'newFn()']])
+        divergences = compare._findTreeDivergences(treeB, treeA)
+        self.assertEqual(len(divergences), 1)
+        self.assertEqual(divergences[0], ['begin', 'fn1()', 'fn2()', 'newFn()'])
 
     #def testDuplicateCallCountDivergences(self):
     #    treeA = self._simpleTestTree()
