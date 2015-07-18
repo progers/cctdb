@@ -3,8 +3,10 @@
 # Dtrace has various issues on OSX which make this approach to generating CCTs a little messy.
 
 import json
+import os
 import re
 from subprocess import Popen, PIPE
+from tempfile import mkstemp
 
 DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
 DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
@@ -154,6 +156,10 @@ def _convertRecordingToCallTree(recording):
 
 # Run dtrace, returning the output as a string.
 def _dtrace(args, verbose):
+    # To prevent stderr/stdout from being interleaved in our dtrace data we use a temp file.
+    tempFileDescriptor, tempFileName = mkstemp()
+    args += ' -o \'' + tempFileName + '\''
+
     if (verbose):
         print 'dtrace ' + args
     process = Popen('dtrace ' + args, stderr=PIPE, stdout=PIPE, shell=True)
@@ -165,7 +171,13 @@ def _dtrace(args, verbose):
             raise Exception('dtrace not found. Try installing dtrace.')
         if (not output):
             raise Exception(errors)
-    return output
+
+    # Read the dtrace output from our tempfile, then free the file.
+    tempFile = open(tempFileName, 'r')
+    data = tempFile.read()
+    tempFile.close()
+    os.close(tempFileDescriptor)
+    return data
 
 # Parse the dtrace list output of the format: ID PROVIDER MODULE FUNCTION_NAME entry.
 def _parseEntryList(input):

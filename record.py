@@ -32,7 +32,7 @@ def main():
             json.dump(result, outfile, sort_keys = False, indent = 2)
             outfile.close()
         else:
-            print result
+            print json.dumps(result, sort_keys = False, indent = 2)
 
 if __name__ == "__main__":
     main()
