@@ -22,12 +22,10 @@ int partition(int* numbers, int a, int b) {
             a++;
         while (numbers[b] > pivot)
             b--;
-
         if (numbers[a] == numbers[b])
             a++;
         else if (a < b)
             swap(numbers, a, b);
-
     }
     return b;
 }
@@ -37,7 +35,7 @@ void quicksort(int* numbers, int a, int b) {
         int m = partition(numbers, a, b);
         quicksort(numbers, a, m - 1);
         quicksort(numbers, m + 1, b);
-        if (numbers[a] == 5) // BUG!
+        if (numbers[a] == 5) // WARNING: THIS IS A BUG!
             swap(numbers, a, b);
     }
 }
@@ -48,7 +46,7 @@ void sort(int* numbers, int count) {
 
 int main(int argc, char *argv[]) {
     int numArgs = argc - 1;
-    if (numArgs <= 1) {
+    if (numArgs < 1) {
         fprintf(stderr, "Run with a list of numbers to sort them.\n");
         return 1;
     }
