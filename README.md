@@ -1,43 +1,56 @@
 Calling Context Tree Debugging
 =========
 
+This is only a proof of concept and needs more testing.
+
 CCTDB is a debugging technique where every function call is recorded for two runs of a program and then compared to find where they differ. This approach is useful for large software projects where a failing testcase is available but it's not obvious where to start debugging.
 
-The program does not need to be compiled with special flags or instrumentation as function calls are traced at the kernel level (requires sudo) using dtrace.
-
-CCTDB is practical for projects as large as Chromium. At the moment, the code is quite fragile (only works on OSX, if at all, etc).
-
-Requirements
----------
-  - dtrace and root access for kernel tracing.
+Calling Context Trees are currently generated using dtrace which has downsides (OSX-only, requires root). I hope ptrace/gdb/lldb can be used to generate better CCTs in the future.
 
 Tutorial
 ---------
-This is a short walkthrough and there are more detailed examples in the examples folder.
-
 The first step is to find module and function symbols for some high-level entry point in the program (e.g., `main()`).
 ```
-sudo ./record.py -r '[your program]' -m list -f list
-
-module(modulea) function(main())
-module(moduleb) function(foo(int*))
-...
+> sudo ./listmodules.py '[your program]'
+    moduleA
+    moduleB
+    ...
+> sudo ./listfunctions.py '[your program]' -m 'moduleA'
+    int main()
+    void functionA()
+    int functionB(int, char)
+    ...
 ```
 
-We want CCTDB to trace every function call made within `main()`, and separate groups of function calls if `main()` is called multiple times.
+Now record every function call made within the module `moduleA` and the function `int main()`. You can also capture every function call by omitting -f and -m, or attach to existing processes with -p, etc.
 ```
-sudo ./record.py -r '[your program]' -m 'modulea' -f 'main()'
+> sudo ./record.py -c '[your program] [args]' -m 'moduleA' -f 'int main()' > goodrecording.json
 ```
 
-This will launch your program and trace all function calls in `main()`, outputting the result as json. You can also capture every function call by omitting -f, attach to existing processes with -p, etc.
-
-Our goal is to find the difference between two program runs. Use CCTDB to run the program twice, once with known good input and a second time with the bug:
+This will record a Calling Context Tree (CCT) which has a format like the following:
 ```
-sudo ./record.py -r '[your program] goodInput' -m 'modulea' -f 'main()' > good.json
-sudo ./record.py -r '[your program] badInput' -m 'modulea' -f 'main()' > bad.json
-
-./compare.py -a good.json -b bad.json
+[
+    {
+        "name": "int main()"
+        "calls": [
+            { "name": "int secondFunction(...)" },
+            { "name": "void thirdFunction(...)" },
+            { "name": "int secondFunction(...)" }
+        ]
+    }
+]
 ```
-The compare call will open your default browser with a diff viewer showing where the two runs differed.
 
-![alt text](http://philiprogers.com/cctdbscreenshot2.png "Diff screenshot")
+Now record a second CCT but on a run of the program that contains a bug:
+```
+> sudo ./record.py -c '[your program] [badinput]' -m 'moduleA' -f 'int main()' > badrecording.json
+```
+
+Lastly, compare the two runs.
+```
+> ./compare.py goodrecording.json badrecording.json
+    goodrecording.json diverged from badrecording.json in 1 places:
+        void thirdFunction(...) which was called by int main()
+```
+
+The bad input didn't call `thirdFunction(...)` but the good input did. Time to start debugging calls to `thirdFunction(...)`!
