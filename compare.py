@@ -53,12 +53,12 @@ class CallListMatchType:
     MATCH = 3
 
 def _countCallsToFunction(call, name):
-    if ("cachedCountMap" in call):
-        return call["cachedCountMap"][name]
+    if ("_cachedCountMap" in call):
+        return call["_cachedCountMap"][name]
     counts = defaultdict(int)
     for c in call["calls"]:
         counts[c["name"]] += 1
-    call["cachedCountMap"] = counts
+    call["_cachedCountMap"] = counts
     return counts[name]
 
 # Check if a call list exists in a subtree. To find matches in a tree, [tree] can be passed as the
@@ -104,59 +104,92 @@ def _hasMatchingCallList(matchingCallList, partialCallList):
 
 def _loadRecording(file):
     if (not os.path.isfile(file)):
-        raise Exception('File not found: ' + file)
+        raise Exception("File not found: " + file)
 
-    with open (file, "r") as inFile:
+    with open (file, 'r') as inFile:
         data = inFile.read()
     return json.loads(data)
 
-def _printTreeDivergenceSummary(recordingA, recordingB):
-    divergences = _findTreeDivergences(recordingA, recordingB)
-
+def _printDivergences(divergences):
     lastCalls = []
-    for stack in divergences:
-        lastCalls.append(stack[-1])
+    for divergence in divergences:
+        lastCalls.append(divergence[-1])
     uniqueLastCalls = set(lastCalls)
 
-    print "Trees diverged in " + str(len(divergences)) + " places."
+    penultimateCallsMap = {}
+    for divergence in divergences:
+        if (len(divergence) < 1):
+            continue
+
+        lastCall = divergence[-1]
+        if (not lastCall in penultimateCallsMap):
+            penultimateCallsMap[lastCall] = []
+
+        if (len(divergence) == 1):
+            penultimateCallsMap[lastCall].append('')
+        else:
+            penultimateCallsMap[lastCall].append(divergence[-2])
+
     for lastCall in uniqueLastCalls:
-        print "    " + lastCall + " (" + str(lastCalls.count(lastCall)) + " instances)"
+        penultimateCalls = penultimateCallsMap[lastCall]
+        uniquePenultimateCalls = set(penultimateCalls)
+        if (len(uniquePenultimateCalls) == 1):
+            duplicateCount = penultimateCalls.count(penultimateCalls[0])
+            print "  " + lastCall + " which was called by " + penultimateCalls[0] + ((" (" + str(duplicateCount) + " instances)") if duplicateCount > 1 else '')
+        else:
+            print "  " + lastCall + " which was called by:"
+            for penultimateCall in uniquePenultimateCalls:
+                duplicateCount = penultimateCalls.count(penultimateCall)
+                print "    " + penultimateCall + ((" (" + str(duplicateCount) + " instances)") if duplicateCount > 1 else '')
+
+def _printTreeDivergences(unrootedRecordingA, unrootedRecordingB, recordingAName = 'A', recordingBName = 'B'):
+    # Multiple subtrees can occur if there are multiple entry points into a program or if the user
+    # filtered on a specific function call. Root both recordings at a synthetic call to "begin".
+    recordingA = {}
+    recordingA["name"] = "begin"
+    recordingA["calls"] = unrootedRecordingA
+    recordingB = {}
+    recordingB["name"] = "begin"
+    recordingB["calls"] = unrootedRecordingB
+
+    divergencesAB = _findTreeDivergences(recordingA, recordingB)
+    divergencesBA = _findTreeDivergences(recordingB, recordingA)
+
+    if (len(divergencesAB) == 0 and len(divergencesBA) == 0):
+        print "No function call differences were found in the two call trees."
+        return
+
+    print "Function call count for " + recordingAName + ": " + str(_callCount(recordingA))
+    print "Function call count for " + recordingBName + ": " + str(_callCount(recordingB))
+    print ""
+
+    if (len(divergencesAB) > 0):
+        print recordingAName + " diverged from " + recordingBName + " in " + str(len(divergencesAB)) + " places:"
+        _printDivergences(divergencesAB)
+        if (len(divergencesBA) > 0):
+            print ''
+
+    if (len(divergencesBA) > 0):
+        print recordingBName + " diverged from " + recordingAName + " in " + str(len(divergencesBA)) + " places:"
+        _printDivergences(divergencesBA)
+
 
 def _callCount(subtree):
     count = len(subtree["calls"])
     for call in subtree["calls"]:
-        if "calls" in call:
+        if ("calls" in call):
             count += _callCount(call)
     return count
 
 def main():
-    parser = argparse.ArgumentParser(description='Compare calling context trees')
-    parser.add_argument('recordingA', help='Recording for run A')
-    parser.add_argument('recordingB', help='Recording for run B')
+    parser = argparse.ArgumentParser(description="Compare calling context trees")
+    parser.add_argument("recordingA", help="Recording for run A")
+    parser.add_argument("recordingB", help="Recording for run B")
     args = parser.parse_args()
 
     recordingA = _loadRecording(args.recordingA)
     recordingB = _loadRecording(args.recordingB)
-
-    # Multiple subtrees can occur if there are multiple entry points into a program or if the user
-    # filtered on a specific function call. Root both recordings at a synthetic call to 'begin'.
-    rootA = {}
-    rootA["name"] = "begin"
-    rootA["calls"] = recordingA[:]
-    recordingA = rootA
-    rootB = {}
-    rootB["name"] = "begin"
-    rootB["calls"] = recordingB[:]
-    recordingB = rootB
-
-    print "Function call count for " + args.recordingA + ": " + str(_callCount(recordingA))
-    print "Function call count for " + args.recordingB + ": " + str(_callCount(recordingB))
-
-    print "Differences between " + args.recordingA + " and " + args.recordingB + ":"
-    _printTreeDivergenceSummary(recordingA, recordingB)
-
-    print "\nDifferences between " + args.recordingB + " and " + args.recordingA + ":"
-    _printTreeDivergenceSummary(recordingB, recordingA)
+    _printTreeDivergences(recordingA, recordingB, args.recordingA, args.recordingB)
 
 if __name__ == "__main__":
     main()

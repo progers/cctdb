@@ -8,10 +8,10 @@ import re
 from subprocess import Popen, PIPE
 from tempfile import mkstemp
 
-DTRACE_PRIVILEGE_ERROR = 'DTrace requires additional privileges'
-DTRACE_NOT_FOUND_ERROR = 'dtrace: command not found'
+DTRACE_PRIVILEGE_ERROR = "DTrace requires additional privileges"
+DTRACE_NOT_FOUND_ERROR = "dtrace: command not found"
 
-RECORD_FORKED_PROCESS_WARNING = 'Process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process.'
+RECORD_FORKED_PROCESS_WARNING = "Process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process."
 
 # dtrace script to print a stack trace at every function call in almost-json format
 # (see _convertStacksToJson).
@@ -56,8 +56,8 @@ pid$target:MODULE::entry
 def _convertStacksToJson(recording):
     jsonString = ""
     currentIdx = 0
-    startStackMarker = 'DTRACE_BEGIN_STACK'
-    endStackMarker = 'DTRACE_END_STACK'
+    startStackMarker = "DTRACE_BEGIN_STACK"
+    endStackMarker = "DTRACE_END_STACK"
     startStackMarkerLength = len(startStackMarker)
     endStackMarkerLength = len(endStackMarker)
     while True:
@@ -72,7 +72,7 @@ def _convertStacksToJson(recording):
         stackStartIdx += startStackMarkerLength
         stackEndIdx = recording.find(endStackMarker, stackStartIdx)
         if (stackEndIdx == -1):
-            raise Exception('Error parsing dtrace stacktraces.')
+            raise Exception("Error parsing dtrace stacktraces.")
         stackChunk = recording[stackStartIdx:stackEndIdx]
         stackChunk = stackChunk.strip()
         unparsedStack = stackChunk.split('\n') if len(stackChunk) > 0 else []
@@ -158,7 +158,7 @@ def _convertRecordingToCallTree(recording):
 def _dtrace(args, verbose):
     # To prevent stderr/stdout from being interleaved in our dtrace data we use a temp file.
     tempFileDescriptor, tempFileName = mkstemp()
-    args += ' -o \'' + tempFileName + '\''
+    args += " -o '" + tempFileName + "'"
 
     if (verbose):
         print 'dtrace ' + args
@@ -166,9 +166,9 @@ def _dtrace(args, verbose):
     output, errors = process.communicate()
     if (errors):
         if (DTRACE_PRIVILEGE_ERROR in errors):
-            raise Exception('Additional privileges needed. Try running with sudo.')
+            raise Exception("Additional privileges needed. Try running with sudo.")
         if (DTRACE_NOT_FOUND_ERROR in errors):
-            raise Exception('dtrace not found. Try installing dtrace.')
+            raise Exception("dtrace not found. Try installing dtrace.")
         if (not output):
             raise Exception(errors)
 
@@ -181,17 +181,17 @@ def _dtrace(args, verbose):
 
 # Parse the dtrace list output of the format: ID PROVIDER MODULE FUNCTION_NAME entry.
 def _parseEntryList(input):
-    pattern = re.compile(r'\s*(?P<id>\d+)\s+(?P<provider>[^\s]+)\s+(?P<module>[^\s]+)\s+(?P<function>.*)\sentry')
+    pattern = re.compile(r"\s*(?P<id>\d+)\s+(?P<provider>[^\s]+)\s+(?P<module>[^\s]+)\s+(?P<function>.*)\sentry")
     output = []
     lines = str.splitlines(input)
     for line in lines:
         matches = pattern.search(line)
         if matches:
             match = []
-            match.append(matches.group('id'))
-            match.append(matches.group('provider'))
-            match.append(matches.group('module'))
-            match.append(matches.group('function'))
+            match.append(matches.group("id"))
+            match.append(matches.group("provider"))
+            match.append(matches.group("module"))
+            match.append(matches.group("function"))
             output.append(match)
     return output
 
@@ -199,7 +199,7 @@ def _parseEntryList(input):
 def listFunctions(executable, module = None, verbose = False):
     if not module:
         module = ''
-    args = '-ln \'pid$target:' + module + '::entry\' -c \'' + executable + '\''
+    args = "-ln 'pid$target:" + module + "::entry' -c '" + executable + "'"
     parsed = _parseEntryList(_dtrace(args, verbose))
     functions = set(row[3] for row in parsed)
     return list(functions)
@@ -208,18 +208,18 @@ def listFunctions(executable, module = None, verbose = False):
 def listModules(executable, verbose = False):
     # Another option is to use "-lm 'pid$target:' ...". This will be much slower, though it will
     # return all modules instead of just those with entry functions.
-    args = '-ln \'pid$target:::entry\' -c \'' + executable + '\''
+    args = "-ln 'pid$target:::entry' -c '" + executable + "'"
     parsed = _parseEntryList(_dtrace(args, verbose))
     modules = set(row[2] for row in parsed)
     return list(modules)
 
 # Record the calling context tree of a specific process.
 def recordProcess(pid, module = None, function = None, verbose = False):
-    return _record('-p ' + str(pid), module, function, verbose)
+    return _record("-p " + str(pid), module, function, verbose)
 
 # Record the calling context tree of a command.
 def recordCommand(command, module = None, function = None, verbose = False):
-    return _record('-c \'' + command + '\'', module, function, verbose)
+    return _record("-c '" + command + "'", module, function, verbose)
 
 # Record the calling context tree.
 # If specified, limit the calling context tree to just code inside 'module' and 'function'
@@ -230,15 +230,15 @@ def _record(args, module = None, function = None, verbose = False):
         function = ''
     recordScript = DTRACE_RECORD_SCRIPT
     # : and , are special characters for dtrace, so swap them with the single-character wildcard.
-    recordScript = recordScript.replace('MODULE', module.replace(':', '?').replace(',', '?'))
-    recordScript = recordScript.replace('FUNCTION', function.replace(':', '?').replace(',', '?'))
+    recordScript = recordScript.replace("MODULE", module.replace(':', '?').replace(',', '?'))
+    recordScript = recordScript.replace("FUNCTION", function.replace(':', '?').replace(',', '?'))
     recordScript = recordScript.rstrip('\n')
     recordScript = recordScript.replace('\'', '\\\'')
 
-    args = args + ' -q -n \'' + recordScript + '\''
+    args = args + " -q -n '" + recordScript + "'"
     recording = _dtrace(args, verbose)
 
-    if ('RECORD_FORKED_PROCESS_WARNING' in recording):
+    if ("RECORD_FORKED_PROCESS_WARNING" in recording):
         print RECORD_FORKED_PROCESS_WARNING
 
     return _convertRecordingToCallTree(recording)

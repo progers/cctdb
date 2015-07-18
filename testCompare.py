@@ -61,7 +61,7 @@ class TestCompare(unittest.TestCase):
         # Not all calls in B are in A--newFn is not in A.
         divergences = compare._findTreeDivergences(treeB, treeA)
         self.assertEqual(len(divergences), 1)
-        self.assertEqual(divergences[0], ['begin', 'fn1()', 'fn2()', 'newFn()'])
+        self.assertEqual(divergences[0], ["begin", "fn1()", "fn2()", "newFn()"])
 
     def testDuplicateDivergences(self):
         treeA = self._simpleRootedTestTree()
@@ -74,7 +74,7 @@ class TestCompare(unittest.TestCase):
         self.assertEqual(compare._findTreeDivergences(treeA, treeB), [])
 
         # Not all calls in B are in A--there are two fn1->fn2's in B but only one in A.
-        self.assertEqual(compare._findTreeDivergences(treeB, treeA), [['begin', 'fn1()', 'fn2()'], ['begin', 'fn1()', 'fn2()']])
+        self.assertEqual(compare._findTreeDivergences(treeB, treeA), [["begin", "fn1()", "fn2()"], ["begin", "fn1()", "fn2()"]])
 
     def testSubtreeCallCounts(self):
         # Tree where fn2 and fn3 are both called from fn1.
@@ -109,10 +109,10 @@ class TestCompare(unittest.TestCase):
         bFourthCall["name"] = "fn3()"
         bThirdCall["calls"] = [bFourthCall]
 
-        self.assertEqual(compare._findTreeDivergences(treeB, treeA), [['begin', 'fn1()'], ['begin', 'fn1()']])
+        self.assertEqual(compare._findTreeDivergences(treeB, treeA), [["begin", "fn1()"], ["begin", "fn1()"]])
 
         # This is incorrect but we say that A can be built by B, not vice-versa.
         self.assertEqual(compare._findTreeDivergences(treeA, treeB), [])
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

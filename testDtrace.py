@@ -123,5 +123,5 @@ class TestDtrace(unittest.TestCase):
         self.assertEqual(tree[0]["calls"][0]["calls"][0]["name"], "module`c()")
         self.assertEqual(tree[0]["calls"][0]["calls"][0]["calls"][0]["name"], "module`d()")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
