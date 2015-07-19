@@ -47,8 +47,8 @@ Use `listfunctions.py` to output a list of functions:
 
 sudo is required because CCTDB uses dtrace which uses kernel-level hooks. Lets use the module `brokenQuicksort` and the function `sort(int*, int))` to compare two runs:
 ```
-> sudo ./record.py -c 'examples/brokenQuicksort/brokenQuicksort 1 6 3 9 0' -m 'brokenQuicksort' -f 'sort(int*,int)' > good.json
-> sudo ./record.py -c 'examples/brokenQuicksort/brokenQuicksort 1 6 5 9 0' -m 'brokenQuicksort' -f 'sort(int*,int)' > bad.json
+> sudo ./record.py -c '[path]/brokenQuicksort 1 6 3 9 0' -m 'brokenQuicksort' -f 'sort(int*,int)' > good.json
+> sudo ./record.py -c '[path]/brokenQuicksort 1 6 5 9 0' -m 'brokenQuicksort' -f 'sort(int*,int)' > bad.json
 
 > ./compare.py good.json bad.json
     bad.json diverged from good.json in 1 places:
