@@ -62,7 +62,7 @@ def _convertStacksToJson(recording):
     endStackMarkerLength = len(endStackMarker)
     while True:
         stackStartIdx = recording.find(startStackMarker, currentIdx)
-        if (stackStartIdx == -1):
+        if stackStartIdx == -1:
             jsonString += recording[currentIdx:]
             break
 
@@ -71,7 +71,7 @@ def _convertStacksToJson(recording):
 
         stackStartIdx += startStackMarkerLength
         stackEndIdx = recording.find(endStackMarker, stackStartIdx)
-        if (stackEndIdx == -1):
+        if stackEndIdx == -1:
             raise Exception("Error parsing dtrace stacktraces.")
         stackChunk = recording[stackStartIdx:stackEndIdx]
         stackChunk = stackChunk.strip()
@@ -81,7 +81,7 @@ def _convertStacksToJson(recording):
             call = call.strip()
             # Strip the function call offset (e.g., functionName+0x123 -> functionName).
             offsetSeparatorIdx = call.find('+')
-            if (offsetSeparatorIdx != -1):
+            if offsetSeparatorIdx != -1:
                 call = call[: offsetSeparatorIdx]
             # Strip non-ascii characters which can occur when dtrace overflows on long names.
             call = "".join([i for i in call if 31 < ord(i) < 127])
@@ -102,12 +102,12 @@ def _calculateFrameDepth(completeStack, nextFramePartialStack):
         framesToCheck = min(stackLength, len(nextFramePartialStack) - 1)
         stacksMatch = True
         for frameIdx in range(0, framesToCheck):
-            if (nextFramePartialStack[frameIdx + 1] != stack[stackLength - frameIdx - 1]):
+            if nextFramePartialStack[frameIdx + 1] != stack[stackLength - frameIdx - 1]:
                 stacksMatch = False
                 break
-        if (stacksMatch):
+        if stacksMatch:
             return stackLength
-        elif (stackLength == 0):
+        elif stackLength == 0:
             return 0
         # Pop up a frame and try again
         stack.pop()
@@ -121,12 +121,12 @@ def _convertRecordingToCallTree(recording):
     callsTree = []
     stack = []
     for fnCall in recording:
-        if (fnCall["type"] != "fn"):
+        if fnCall["type"] != "fn":
             continue
-        if (not "stack" in fnCall):
+        if not "stack" in fnCall:
             continue
         fnStack = fnCall["stack"]
-        if (len(fnStack) == 0):
+        if len(fnStack) == 0:
             continue
         depth = _calculateFrameDepth(stack, fnStack)
         if (depth == 0):
@@ -138,7 +138,7 @@ def _convertRecordingToCallTree(recording):
             MAX_SKIPPED_STACK_FRAMES = 12
             for skippedFrames in range(1, min(MAX_SKIPPED_STACK_FRAMES, len(fnStack)-1)):
                 depth = _calculateFrameDepth(stack, fnStack[skippedFrames:])
-                if (depth > 0):
+                if depth > 0:
                     # Pretend the lower frames (e.g., 'e', 'f') never happened.
                     fnStack = fnStack[skippedFrames:]
                     break
@@ -160,16 +160,16 @@ def _dtrace(args, verbose):
     tempFileDescriptor, tempFileName = mkstemp()
     args += " -o '" + tempFileName + "'"
 
-    if (verbose):
+    if verbose:
         print 'dtrace ' + args
     process = Popen('dtrace ' + args, stderr=PIPE, stdout=PIPE, shell=True)
     output, errors = process.communicate()
-    if (errors):
-        if (DTRACE_PRIVILEGE_ERROR in errors):
+    if errors:
+        if DTRACE_PRIVILEGE_ERROR in errors:
             raise Exception("Additional privileges needed. Try running with sudo.")
-        if (DTRACE_NOT_FOUND_ERROR in errors):
+        if DTRACE_NOT_FOUND_ERROR in errors:
             raise Exception("dtrace not found. Try installing dtrace.")
-        if (not output):
+        if not output:
             raise Exception(errors)
 
     # Read the dtrace output from our tempfile, then free the file.
@@ -238,7 +238,7 @@ def _record(args, module = None, function = None, verbose = False):
     args = args + " -q -n '" + recordScript + "'"
     recording = _dtrace(args, verbose)
 
-    if ("RECORD_FORKED_PROCESS_WARNING" in recording):
+    if "RECORD_FORKED_PROCESS_WARNING" in recording:
         print RECORD_FORKED_PROCESS_WARNING
 
     return _convertRecordingToCallTree(recording)
