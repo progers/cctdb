@@ -1,0 +1,61 @@
+[
+  {
+    "name": "brokenQuicksort`sort(int*, int)", 
+    "calls": [
+      {
+        "name": "brokenQuicksort`quicksort(int*, int, int)", 
+        "calls": [
+          {
+            "name": "brokenQuicksort`partition(int*, int, int)", 
+            "calls": [
+              {
+                "name": "brokenQuicksort`swap(int*, int, int)"
+              }
+            ]
+          }, 
+          {
+            "name": "brokenQuicksort`quicksort(int*, int, int)"
+          }, 
+          {
+            "name": "brokenQuicksort`quicksort(int*, int, int)", 
+            "calls": [
+              {
+                "name": "brokenQuicksort`partition(int*, int, int)", 
+                "calls": [
+                  {
+                    "name": "brokenQuicksort`swap(int*, int, int)"
+                  }
+                ]
+              }, 
+              {
+                "name": "brokenQuicksort`quicksort(int*, int, int)"
+              }, 
+              {
+                "name": "brokenQuicksort`quicksort(int*, int, int)", 
+                "calls": [
+                  {
+                    "name": "brokenQuicksort`partition(int*, int, int)", 
+                    "calls": [
+                      {
+                        "name": "brokenQuicksort`swap(int*, int, int)"
+                      }
+                    ]
+                  }, 
+                  {
+                    "name": "brokenQuicksort`quicksort(int*, int, int)"
+                  }, 
+                  {
+                    "name": "brokenQuicksort`quicksort(int*, int, int)"
+                  }, 
+                  {
+                    "name": "brokenQuicksort`swap(int*, int, int)"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
