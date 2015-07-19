@@ -127,5 +127,46 @@ class TestCompare(unittest.TestCase):
         self.assertEqual(divergences[2].function, secondFn1)
         self.assertEqual(divergences[2].reason, "Did not find sufficient calls to fn1.")
 
+    def testOutOfOrderIteration(self):
+        # Pointers are used for iteration (e.g., iterating over a hashmap keyed on pointers) and the
+        # divergence algorithm needs to ignore this ordering.
+
+        # Tree where fn1 is called twice, separated by some other call. The first fn1 calls fn3. The
+        # second fn1 calls both fn3 and fn4.
+        cctA = CCT()
+        firstFn1 = Function("fn1")
+        firstFn1.addCall(Function("fn3"))
+        secondFn1 = Function("fn1")
+        secondFn1.addCall(Function("fn3"))
+        secondFn1.addCall(Function("fn4"))
+        cctA.addCall(firstFn1)
+        cctA.addCall(Function("fn2"))
+        cctA.addCall(secondFn1)
+
+        # Tree where fn1 is called twice, separated by some other call. The first fn1 calls fn3 and
+        # fn4. The second fn1 calls just fn3.
+        cctB = CCT()
+        firstFn1 = Function("fn1")
+        firstFn1.addCall(Function("fn3"))
+        firstFn1.addCall(Function("fn4"))
+        secondFn1 = Function("fn1")
+        secondFn1.addCall(Function("fn3"))
+        cctB.addCall(firstFn1)
+        cctB.addCall(Function("fn2"))
+        cctB.addCall(secondFn1)
+
+        # All calls in A are in B and vice versa.
+        self.assertEqual(compare._findDivergences(cctA, cctB), [])
+        self.assertEqual(compare._findDivergences(cctB, cctA), [])
+
+        # Add a divergence and ensure it is found.
+        fn5 = Function("fn5")
+        firstFn1.calls[0].addCall(fn5)
+        self.assertEqual(compare._findDivergences(cctA, cctB), [])
+        divergences = compare._findDivergences(cctB, cctA)
+        self.assertEqual(len(divergences), 1)
+        self.assertEqual(divergences[0].reason, "Equivalent stack was not found.")
+        self.assertEqual(divergences[0].function, fn5)
+
 if __name__ == "__main__":
     unittest.main()
