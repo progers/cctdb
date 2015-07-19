@@ -10,7 +10,7 @@ from tempfile import mkstemp
 
 DTRACE_PRIVILEGE_ERROR = "DTrace requires additional privileges"
 DTRACE_NOT_FOUND_ERROR = "dtrace: command not found"
-
+DTRACE_BUFFER_ERROR = "drops on CPU"
 RECORD_FORKED_PROCESS_WARNING = "Process forked but cctdb does not follow child processes. Consider using the -p option to attach to a specific process."
 
 # dtrace script to print a stack trace at every function call in almost-json format
@@ -169,6 +169,8 @@ def _dtrace(args, verbose):
             raise Exception("Additional privileges needed. Try running with sudo.")
         if DTRACE_NOT_FOUND_ERROR in errors:
             raise Exception("dtrace not found. Try installing dtrace.")
+        if DTRACE_BUFFER_ERROR in errors:
+            raise Exception("dtrace buffer exceeded. Try filtering on a function with less calls.")
         if not output:
             raise Exception(errors)
 
@@ -235,7 +237,12 @@ def _record(args, module = None, function = None, verbose = False):
     recordScript = recordScript.rstrip('\n')
     recordScript = recordScript.replace('\'', '\\\'')
 
-    args = args + " -q -n '" + recordScript + "'"
+    # Tune dtrace settings for large recordings.
+    # -b 32m sets increases the the primary buffer size (4m -> 32m).
+    # -x switchrate=10hz increases the buffer flush frequency (1hz -> 10hz).
+    args += " -b 32m -x switchrate=10hz"
+
+    args += " -q -n '" + recordScript + "'"
     recording = _dtrace(args, verbose)
 
     if "RECORD_FORKED_PROCESS_WARNING" in recording:
