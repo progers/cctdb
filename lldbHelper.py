@@ -60,7 +60,7 @@ def _getTarget(executable, verbose = False):
 # Return all functions in a specified module.
 def _listFunctions(module, verbose = False):
     functions = []
-    # TODO(phil): Is this the best way to list all functions?
+    # TODO(phil): Is this really the best way to list all functions?
     for symbol in module.symbols:
         if symbol.type == lldb.eSymbolTypeCode:
             functions.append(symbol.name)
@@ -69,11 +69,7 @@ def _listFunctions(module, verbose = False):
 # List available functions, optionally filter by module.
 def listFunctions(executable, module = None, verbose = False):
     target = _getTarget(executable, verbose)
-    modules = None
-    if module:
-        modules = [module]
-    else:
-        modules = listModules(executable, verbose)
+    modules = [module] if module else listModules(executable, verbose)
 
     functions = []
     for module in modules:

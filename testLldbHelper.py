@@ -2,8 +2,8 @@
 
 import lldbHelper
 import platform
-import unittest
 import warnings
+import unittest
 
 class TestLldbHelper(unittest.TestCase):
 
