@@ -1,11 +1,11 @@
 .PHONY: tests
 
-all: brokenQuicksortExample tests
+all: examples/brokenQuicksort/brokenQuicksort tests
 
-brokenQuicksortExample: examples/brokenQuicksort/brokenQuicksort.cpp
+examples/brokenQuicksort/brokenQuicksort: examples/brokenQuicksort/brokenQuicksort.cpp
 	g++ -g -Wall -std=c++11 -O0 -fno-inline examples/brokenQuicksort/brokenQuicksort.cpp -o examples/brokenQuicksort/brokenQuicksort
 
-tests:
+tests: examples/brokenQuicksort/brokenQuicksort
 	python -m unittest discover
 
 clean:
