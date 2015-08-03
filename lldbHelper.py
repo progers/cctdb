@@ -85,7 +85,7 @@ def recordProcess(pid, module = None, function = None, verbose = False):
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
 # a CCT subtree.
 # TODO(phil): support inlined functions.
-def _recordSubtreeCallsFromThread(cct, thread, module):
+def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
     if not thread:
         return
 
@@ -93,8 +93,6 @@ def _recordSubtreeCallsFromThread(cct, thread, module):
     while True:
         stopReason = thread.GetStopReason()
         if not (stopReason == lldb.eStopReasonPlanComplete or stopReason == lldb.eStopReasonBreakpoint):
-            return
-        if not thread.GetNumFrames() == frameDepth:
             return
         frame = thread.GetFrameAtIndex(0)
         if not frame:
@@ -112,14 +110,18 @@ def _recordSubtreeCallsFromThread(cct, thread, module):
                 continue
             nextFunctionCall = Function(function.GetName())
             cct.addCall(nextFunctionCall)
-            _recordSubtreeCallsFromThread(nextFunctionCall, thread, module)
+            _recordSubtreeCallsFromThread(nextFunctionCall, thread, module, verbose)
         elif nextFrameDepth < frameDepth:
             return
 
 # Record the calling context tree of a command.
-def recordCommand(executable, args, module = None, function = None, verbose = False):
+def recordCommand(executable, args = [], module = None, function = None, verbose = False):
     target = _getTarget(executable, verbose)
     target.GetDebugger().SetAsync(False)
+
+    # TODO(phil): Launch in a stopped state instead of defaulting to "main".
+    if not function:
+        function = "main"
     mainBreakpoint = target.BreakpointCreateByName(function, target.GetExecutable().GetFilename());
 
     process = target.LaunchSimple(args, None, os.getcwd())
@@ -142,7 +144,7 @@ def recordCommand(executable, args, module = None, function = None, verbose = Fa
                 if function:
                     currentFunction = Function(function.GetName())
                     cct.addCall(currentFunction)
-                    _recordSubtreeCallsFromThread(currentFunction, thread, module)
+                    _recordSubtreeCallsFromThread(currentFunction, thread, module, verbose)
             process.Continue()
         elif state == lldb.eStateExited:
             break
