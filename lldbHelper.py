@@ -1,7 +1,8 @@
 # lldb script for generating calling context trees (CCT).
 #
-# TODO: DOC ME
+# This script drives lldb via python APIs to step through a program and generate a CCT.
 
+from cct import CCT, Function
 import commands
 import optparse
 import os
@@ -40,18 +41,8 @@ except ImportError:
     if not success:
         raise Exception("Couldn't locate the 'lldb' module, please set PYTHONPATH correctly")
 
-def _runCommand(interpreter, command):
-    returnObject = lldb.SBCommandReturnObject()
-    interpreter.HandleCommand(command, returnObject)
-    if returnObject.Succeeded():
-        return returnObject.GetOutput()
-    else:
-        print returnObject
-
 def _getTarget(executable, verbose = False):
     debugger = lldb.SBDebugger.Create()
-    # TODO(phil): Async or sync?
-    # debugger.SetAsync(False)
     target = debugger.CreateTarget(executable)
     if not target:
         raise Exception("Error creating target '" + executable + "'")
@@ -91,6 +82,73 @@ def listModules(executable, verbose = False):
 def recordProcess(pid, module = None, function = None, verbose = False):
     raise Exception("recordProcess not implemented")
 
+# Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
+# a CCT subtree.
+# TODO(phil): support inlined functions.
+def _recordSubtreeCallsFromThread(cct, thread, module):
+    if not thread:
+        return
+
+    frameDepth = thread.GetNumFrames()
+    while True:
+        stopReason = thread.GetStopReason()
+        if not (stopReason == lldb.eStopReasonPlanComplete or stopReason == lldb.eStopReasonBreakpoint):
+            return
+        if not thread.GetNumFrames() == frameDepth:
+            return
+        frame = thread.GetFrameAtIndex(0)
+        if not frame:
+            return
+        if module and not str(frame.module.file) == module:
+            thread.StepOutOfFrame(frame)
+            continue
+
+        thread.StepInto()
+        frame = thread.GetFrameAtIndex(0)
+        nextFrameDepth = thread.GetNumFrames()
+        if nextFrameDepth > frameDepth:
+            function = frame.GetFunction()
+            if not function:
+                continue
+            nextFunctionCall = Function(function.GetName())
+            cct.addCall(nextFunctionCall)
+            _recordSubtreeCallsFromThread(nextFunctionCall, thread, module)
+        elif nextFrameDepth < frameDepth:
+            return
+
 # Record the calling context tree of a command.
-def recordCommand(command, module = None, function = None, verbose = False):
-    raise Exception("recordCommand not implemented")
+def recordCommand(executable, args, module = None, function = None, verbose = False):
+    target = _getTarget(executable, verbose)
+    target.GetDebugger().SetAsync(False)
+    mainBreakpoint = target.BreakpointCreateByName(function, target.GetExecutable().GetFilename());
+
+    process = target.LaunchSimple(args, None, os.getcwd())
+    if not process:
+        raise Exception("Could not launch '" + executable + "' with args '" + ",".join(args) + "'")
+
+    cct = CCT()
+    while True:
+        state = process.GetState()
+        if state == lldb.eStateStopped:
+            # TODO(phil): Support multiple threads by iterating over each here.
+            thread = process.GetThreadAtIndex(0)
+            if not thread:
+                raise Exception("Thread terminated unexpectedly")
+            if thread.GetStopReason() == lldb.eStopReasonBreakpoint or thread.GetStopReason() == lldb.eStopReasonPlanComplete:
+                frame = thread.GetFrameAtIndex(0)
+                if not frame:
+                    break
+                function = frame.GetFunction()
+                if function:
+                    currentFunction = Function(function.GetName())
+                    cct.addCall(currentFunction)
+                    _recordSubtreeCallsFromThread(currentFunction, thread, module)
+            process.Continue()
+        elif state == lldb.eStateExited:
+            break
+        else:
+            stateString = target.GetDebugger().StateAsCString(state)
+            process.Kill()
+            raise Exception("Unexpected process state '" + stateString + "'")
+            break
+    return cct
