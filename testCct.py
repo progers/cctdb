@@ -81,8 +81,9 @@ class TestCCT(unittest.TestCase):
     def testJsonEncoding(self):
         cct = self._simpleCCT()
         fn1 = cct.calls[0]
-        self.assertEquals(fn1.asJson(), '{\n  "name": "fn1", \n  "calls": [\n    {\n      "name": "fn3"\n    }\n  ]\n}')
-        self.assertEquals(cct.asJson(), '[\n  {\n    "name": "fn1", \n    "calls": [\n      {\n        "name": "fn3"\n      }\n    ]\n  }, \n  {\n    "name": "fn2"\n  }\n]')
+        self.assertEquals(fn1.asJson(), '{"name": "fn1", "calls": [{"name": "fn3"}]}')
+        self.assertEquals(fn1.asJson(2), '{\n  "name": "fn1", \n  "calls": [\n    {\n      "name": "fn3"\n    }\n  ]\n}')
+        self.assertEquals(cct.asJson(), '[{"name": "fn1", "calls": [{"name": "fn3"}]}, {"name": "fn2"}]')
 
     def testJsonDecoding(self):
         cct = self._simpleCCT()

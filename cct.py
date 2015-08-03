@@ -42,8 +42,8 @@ class Function(object):
     def uniqueCallNames(self):
         return self._callCountsByName.keys()
 
-    def asJson(self):
-        return json.dumps(self, sort_keys=False, indent=2, cls=FunctionJSONEncoder)
+    def asJson(self, indent = None):
+        return json.dumps(self, sort_keys=False, indent=indent, cls=FunctionJSONEncoder)
 
     @staticmethod
     def fromJson(string):
@@ -55,8 +55,8 @@ class CCT(Function):
     def __init__(self):
         Function.__init__(self, None)
 
-    def asJson(self):
-        return json.dumps(self.calls, sort_keys=False, indent=2, cls=FunctionJSONEncoder)
+    def asJson(self, indent = None):
+        return json.dumps(self.calls, sort_keys=False, indent=indent, cls=FunctionJSONEncoder)
 
     def callStack(self):
         return []
