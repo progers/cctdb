@@ -121,10 +121,12 @@ def _record(process, module, verbose):
             thread = process.GetThreadAtIndex(0)
             if not thread:
                 raise Exception("Thread terminated unexpectedly")
-            if thread.GetStopReason() == lldb.eStopReasonSignal:
+            stopReason = thread.GetStopReason()
+            # Continue a stopped process by default.
+            if stopReason == lldb.eStopReasonSignal:
                 process.Continue()
                 continue
-            if thread.GetStopReason() == lldb.eStopReasonBreakpoint or thread.GetStopReason() == lldb.eStopReasonPlanComplete:
+            if stopReason == lldb.eStopReasonBreakpoint or stopReason == lldb.eStopReasonPlanComplete:
                 frame = thread.GetFrameAtIndex(0)
                 if not frame:
                     break
