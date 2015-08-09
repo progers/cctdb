@@ -4,7 +4,6 @@
 
 import argparse
 from cct import CCT, Function
-import dtrace
 import json
 import os.path
 

@@ -1,38 +1,37 @@
 #!/usr/bin/env python
 
 # record.py - List a calling context tree.
+# TODO(pdr): Add an integration test for recording.
 
 import argparse
-import dtrace
+from cct import CCT
 import json
+import lldbHelper
 
 def main():
     parser = argparse.ArgumentParser(description='Record a calling context tree.')
-    parser.add_argument('-c', '--command', help='Command to run (use absolute paths, may include args')
+    parser.add_argument('-e', '--executable', help='Executable to run (additional arguments are forwarded to this executable)')
     parser.add_argument('-p', '--pid', help='Process id')
     parser.add_argument('-m', '--module', help='Filter by module')
     parser.add_argument('-f', '--function', help='Filter for calls made in a specific function')
-    parser.add_argument('-o', '--out', help='Ouput file')
     parser.add_argument('--verbose', help='Verbose output', action='store_true')
-    args = parser.parse_args()
+    args, leftoverArgs = parser.parse_known_args()
 
     result = None
 
-    if (args.command):
-        result = dtrace.recordCommand(args.command, args.module, args.function, args.verbose)
+    if (args.executable):
+        result = lldbHelper.recordCommand(args.executable, leftoverArgs, args.module, args.function, args.verbose)
     elif (args.pid):
-        result = dtrace.recordProcess(args.pid, args.module, args.function, args.verbose)
+        result = lldbHelper.recordProcess(args.pid, args.module, args.function, args.verbose)
     else:
-        print "Must specify either --command or --pid"
+        print "Must specify either --executable or --pid"
         return
 
     if result:
-        if (args.out):
-            outfile = open(args.out, 'w')
-            json.dump(result, outfile, sort_keys = False, indent = 2)
-            outfile.close()
-        else:
-            print json.dumps(result, sort_keys = False, indent = 2)
+        # Serialize the result if it is a CCT.
+        if isinstance(result, CCT):
+            result = result.asJson(2)
+        print result
 
 if __name__ == "__main__":
     main()
