@@ -2,8 +2,9 @@
 
 import lldbHelper
 import platform
-import warnings
+import subprocess
 import unittest
+import warnings
 
 class TestLldbHelper(unittest.TestCase):
 
@@ -11,6 +12,16 @@ class TestLldbHelper(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             lldbHelper.listModules("does/not/exist")
         self.assertEqual(cm.exception.message, "Error creating target 'does/not/exist'")
+
+    def testBadModule(self):
+        if platform.system() == "Darwin":
+            executable = "examples/brokenQuicksort/brokenQuicksort"
+            modules = lldbHelper.listModules(executable)
+            with self.assertRaises(Exception) as cm:
+                cct = lldbHelper.recordCommand(executable, ["1"], "ModuleThatDoesNotExist", "main")
+            self.assertIn("Stopped on a breakpoint but specified module (ModuleThatDoesNotExist)", cm.exception.message)
+        else:
+            warnings.warn("Platform not supported for this test")
 
     def testListModules(self):
         if platform.system() == "Darwin":
@@ -88,6 +99,20 @@ class TestLldbHelper(unittest.TestCase):
 
             cct = lldbHelper.recordCommand(executable, ["3", "1", "2", "3", "2"], brokenQuicksortModule, "partition(int*, int, int)")
             self.assertEquals(cct.asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}, {"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}, {"name": "partition(int*, int, int)"}]')
+        else:
+            warnings.warn("Platform not supported for this test")
+
+    def testRecordProcess(self):
+        if platform.system() == "Darwin":
+            executable = "testData/fibonacci"
+            modules = lldbHelper.listModules(executable)
+            fibonacciModule = modules[0];
+            self.assertIn("fibonacci", fibonacciModule)
+
+            proc = subprocess.Popen(executable + " 3", shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            cct = lldbHelper.recordProcess(executable, proc.pid, fibonacciModule, "computeFibonacci(unsigned long)")
+            self.assertEquals(cct.asJson(), '[{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}]')
+            self.assertIn("Fibonacci number 3 is 2", proc.stdout.read())
         else:
             warnings.warn("Platform not supported for this test")
 

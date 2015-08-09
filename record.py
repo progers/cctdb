@@ -10,7 +10,7 @@ import lldbHelper
 
 def main():
     parser = argparse.ArgumentParser(description='Record a calling context tree.')
-    parser.add_argument('-e', '--executable', help='Executable to run (additional arguments are forwarded to this executable)')
+    parser.add_argument('executable', help='Executable to run (any additional arguments are forwarded to this executable)')
     parser.add_argument('-p', '--pid', help='Process id')
     parser.add_argument('-m', '--module', help='Filter by module')
     parser.add_argument('-f', '--function', help='Filter for calls made in a specific function')
@@ -18,14 +18,10 @@ def main():
     args, leftoverArgs = parser.parse_known_args()
 
     result = None
-
-    if (args.executable):
-        result = lldbHelper.recordCommand(args.executable, leftoverArgs, args.module, args.function, args.verbose)
-    elif (args.pid):
-        result = lldbHelper.recordProcess(args.pid, args.module, args.function, args.verbose)
+    if (args.pid):
+        result = lldbHelper.recordProcess(args.executable, args.pid, args.module, args.function, args.verbose)
     else:
-        print "Must specify either --executable or --pid"
-        return
+        result = lldbHelper.recordCommand(args.executable, leftoverArgs, args.module, args.function, args.verbose)
 
     if result:
         # Serialize the result if it is a CCT.

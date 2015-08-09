@@ -78,10 +78,6 @@ def listModules(executable, verbose = False):
         modules.append(str(module.file))
     return modules
 
-# Record the calling context tree of a specific process.
-def recordProcess(pid, module = None, function = None, verbose = False):
-    raise Exception("recordProcess not implemented")
-
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
 # a CCT subtree.
 # TODO(phil): support inlined functions.
@@ -114,20 +110,9 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
         elif nextFrameDepth < frameDepth:
             return
 
-# Record the calling context tree of a command.
-def recordCommand(executable, args = [], module = None, function = None, verbose = False):
-    target = _getTarget(executable, verbose)
-    target.GetDebugger().SetAsync(False)
-
-    # TODO(phil): Launch in a stopped state instead of defaulting to "main".
-    if not function:
-        function = "main"
-    mainBreakpoint = target.BreakpointCreateByName(function, target.GetExecutable().GetFilename());
-
-    process = target.LaunchSimple(args, None, os.getcwd())
-    if not process:
-        raise Exception("Could not launch '" + executable + "' with args '" + ",".join(args) + "'")
-
+# Record a calling context tree from the current process.
+# For each non-nested breakpoint, a top-level call is created in the CCT.
+def _record(process, module, verbose):
     cct = CCT()
     while True:
         state = process.GetState()
@@ -136,21 +121,62 @@ def recordCommand(executable, args = [], module = None, function = None, verbose
             thread = process.GetThreadAtIndex(0)
             if not thread:
                 raise Exception("Thread terminated unexpectedly")
+            if thread.GetStopReason() == lldb.eStopReasonSignal:
+                process.Continue()
+                continue
             if thread.GetStopReason() == lldb.eStopReasonBreakpoint or thread.GetStopReason() == lldb.eStopReasonPlanComplete:
                 frame = thread.GetFrameAtIndex(0)
                 if not frame:
                     break
                 function = frame.GetFunction()
                 if function:
+                    if module and not str(frame.module.file) == module:
+                        raise Exception("Stopped on a breakpoint but specified module (" + module + ") did not match breakpoint module (" + str(frame.module.file) + ")")
                     currentFunction = Function(function.GetName())
                     cct.addCall(currentFunction)
                     _recordSubtreeCallsFromThread(currentFunction, thread, module, verbose)
-            process.Continue()
+                    process.Continue()
         elif state == lldb.eStateExited:
             break
         else:
-            stateString = target.GetDebugger().StateAsCString(state)
+            stateString = process.GetTarget().GetDebugger().StateAsCString(state)
             process.Kill()
             raise Exception("Unexpected process state '" + stateString + "'")
             break
     return cct
+
+# Record the calling context tree of a specific process.
+def recordProcess(executable, pid, module = None, function = None, verbose = False):
+    target = _getTarget(executable, verbose)
+    target.GetDebugger().SetAsync(False)
+
+    if not function:
+        function = "main"
+    target.BreakpointCreateByName(function, target.GetExecutable().GetFilename());
+
+    attachInfo = lldb.SBAttachInfo(int(pid))
+    error = lldb.SBError()
+    process = target.Attach(attachInfo, error)
+
+    if error.Fail():
+        raise Exception("Error attaching to process: " + error.description)
+    if not process:
+        raise Exception("Unable to attach to process")
+
+    return _record(process, module, verbose)
+
+# Record the calling context tree of a command.
+def recordCommand(executable, args = [], module = None, function = None, verbose = False):
+    target = _getTarget(executable, verbose)
+    target.GetDebugger().SetAsync(False)
+
+    # TODO(phil): Launch in a stopped state instead of defaulting to "main".
+    if not function:
+        function = "main"
+    target.BreakpointCreateByName(function, target.GetExecutable().GetFilename());
+
+    process = target.LaunchSimple(args, None, os.getcwd())
+    if not process:
+        raise Exception("Could not launch '" + executable + "' with args '" + ",".join(args) + "'")
+
+    return _record(process, module, verbose)
