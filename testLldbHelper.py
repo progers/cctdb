@@ -19,7 +19,7 @@ class TestLldbHelper(unittest.TestCase):
             modules = lldbHelper.listModules(executable)
             with self.assertRaises(Exception) as cm:
                 cct = lldbHelper.recordCommand(executable, ["1"], "ModuleThatDoesNotExist", "main")
-            self.assertIn("Stopped on a breakpoint but specified module (ModuleThatDoesNotExist)", cm.exception.message)
+            self.assertIn("Unable to find specified module in target.", cm.exception.message)
         else:
             warnings.warn("Platform not supported for this test")
 

@@ -71,6 +71,7 @@ def listFunctions(executable, module = None, verbose = False):
     return functions
 
 # List available modules.
+# TODO(phil): This will fail to find modules in subprocesses.
 def listModules(executable, verbose = False):
     target = _getTarget(executable, verbose)
     modules = []
@@ -113,6 +114,11 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
 # Record a calling context tree from the current process.
 # For each non-nested breakpoint, a top-level call is created in the CCT.
 def _record(process, module, verbose):
+    if module:
+        foundModule = process.GetTarget().FindModule(lldb.SBFileSpec(module))
+        if not foundModule.IsValid():
+            raise Exception("Unable to find specified module in target.")
+
     cct = CCT()
     while True:
         state = process.GetState()
