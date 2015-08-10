@@ -113,11 +113,18 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
 
 # Record a calling context tree from the current process.
 # For each non-nested breakpoint, a top-level call is created in the CCT.
-def _record(process, module, verbose):
+def _record(process, module, function, verbose):
     if module:
         foundModule = process.GetTarget().FindModule(lldb.SBFileSpec(module))
         if not foundModule.IsValid():
             raise Exception("Unable to find specified module in target.")
+
+    if process.GetTarget().num_breakpoints <= 0:
+        raise Exception("Failed to create function breakpoint.")
+    else:
+        for breakpoint in process.GetTarget().breakpoint_iter():
+            if breakpoint.GetNumLocations() <= 0:
+                raise Exception("Function '" + function + "'' was not found.")
 
     cct = CCT()
     while True:
@@ -171,7 +178,7 @@ def recordProcess(executable, pid, module = None, function = None, verbose = Fal
     if not process:
         raise Exception("Unable to attach to process")
 
-    return _record(process, module, verbose)
+    return _record(process, module, function, verbose)
 
 # Record the calling context tree of a command.
 def recordCommand(executable, args = [], module = None, function = None, verbose = False):
@@ -187,4 +194,4 @@ def recordCommand(executable, args = [], module = None, function = None, verbose
     if not process:
         raise Exception("Could not launch '" + executable + "' with args '" + ",".join(args) + "'")
 
-    return _record(process, module, verbose)
+    return _record(process, module, function, verbose)

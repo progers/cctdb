@@ -60,6 +60,19 @@ class TestLldbHelper(unittest.TestCase):
         else:
             warnings.warn("Platform not supported for this test")
 
+    def testBadFunction(self):
+        if platform.system() == "Darwin":
+            executable = "testData/fibonacci"
+            modules = lldbHelper.listModules(executable)
+            fibonacciModule = modules[0];
+            self.assertIn("fibonacci", fibonacciModule)
+
+            with self.assertRaises(Exception) as cm:
+                cct = lldbHelper.recordCommand(executable, ["3"], fibonacciModule, "functionDoesNotExist")
+            self.assertIn("Function 'functionDoesNotExist'' was not found.", cm.exception.message)
+        else:
+            warnings.warn("Platform not supported for this test")
+
     def testBasicRecordingAtMain(self):
         if platform.system() == "Darwin":
             executable = "examples/brokenQuicksort/brokenQuicksort"
