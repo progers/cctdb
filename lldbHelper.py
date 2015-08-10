@@ -124,7 +124,7 @@ def _record(process, module, function, verbose):
     else:
         for breakpoint in process.GetTarget().breakpoint_iter():
             if breakpoint.GetNumLocations() <= 0:
-                raise Exception("Function '" + function + "'' was not found.")
+                raise Exception("Function '" + function + "' was not found.")
 
     cct = CCT()
     while True:

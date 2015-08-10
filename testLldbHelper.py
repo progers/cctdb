@@ -69,7 +69,7 @@ class TestLldbHelper(unittest.TestCase):
 
             with self.assertRaises(Exception) as cm:
                 cct = lldbHelper.recordCommand(executable, ["3"], fibonacciModule, "functionDoesNotExist")
-            self.assertIn("Function 'functionDoesNotExist'' was not found.", cm.exception.message)
+            self.assertIn("Function 'functionDoesNotExist' was not found.", cm.exception.message)
         else:
             warnings.warn("Platform not supported for this test")
 
