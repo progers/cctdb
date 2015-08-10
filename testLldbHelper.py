@@ -129,5 +129,17 @@ class TestLldbHelper(unittest.TestCase):
         else:
             warnings.warn("Platform not supported for this test")
 
+    def testBasicRecordingWithThreads(self):
+        if platform.system() == "Darwin":
+            executable = "testData/fibonacciThread"
+            modules = lldbHelper.listModules(executable)
+            fibonacciThreadModule = modules[0];
+            self.assertIn("fibonacciThread", fibonacciThreadModule)
+
+            cct = lldbHelper.recordCommand(executable, ["3"], fibonacciThreadModule, "computeFibonacci(unsigned long)")
+            self.assertEquals(cct.asJson(), '[{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}]')
+        else:
+            warnings.warn("Platform not supported for this test")
+
 if __name__ == "__main__":
     unittest.main()

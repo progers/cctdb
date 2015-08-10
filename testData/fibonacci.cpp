@@ -1,14 +1,13 @@
 // A simple fibonacci program that stops itself on startup.
 //
-// This program prints the nth fibonacci number. To start
-// the program, send a SIGCONT signal (kill -SIGCONT [pid])
-// or just attach a debugger.
+// This program prints the nth fibonacci number. To start the program, send a SIGCONT signal
+// (kill -SIGCONT [pid]) or just attach a debugger.
 //
 // Usage: ./fibonacci [n]
 
-#include <stdio.h>
 #include <cstdlib>
 #include <signal.h>
+#include <stdio.h>
 
 unsigned long fib(unsigned long n) {
     if (n >= 3)

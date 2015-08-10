@@ -82,6 +82,7 @@ def listModules(executable, verbose = False):
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
 # a CCT subtree.
 # TODO(phil): support inlined functions.
+# TODO(phil): support threading in a given subtree.
 def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
     if not thread:
         return
@@ -130,27 +131,18 @@ def _record(process, module, function, verbose):
     while True:
         state = process.GetState()
         if state == lldb.eStateStopped:
-            # TODO(phil): Support multiple threads by iterating over each here.
-            thread = process.GetThreadAtIndex(0)
-            if not thread:
-                raise Exception("Thread terminated unexpectedly")
-            stopReason = thread.GetStopReason()
-            # Continue a stopped process by default.
-            if stopReason == lldb.eStopReasonSignal:
-                process.Continue()
-                continue
-            if stopReason == lldb.eStopReasonBreakpoint or stopReason == lldb.eStopReasonPlanComplete:
-                frame = thread.GetFrameAtIndex(0)
-                if not frame:
-                    break
-                function = frame.GetFunction()
-                if function:
-                    if module and not str(frame.module.file) == module:
-                        raise Exception("Stopped on a breakpoint but specified module (" + module + ") did not match breakpoint module (" + str(frame.module.file) + ")")
-                    currentFunction = Function(function.GetName())
-                    cct.addCall(currentFunction)
-                    _recordSubtreeCallsFromThread(currentFunction, thread, module, verbose)
-                    process.Continue()
+            for thread in process.threads:
+                stopReason = thread.GetStopReason()
+                if stopReason == lldb.eStopReasonBreakpoint or stopReason == lldb.eStopReasonPlanComplete:
+                    frame = thread.GetFrameAtIndex(0)
+                    frameFunction = frame.GetFunction() if frame else None
+                    if frameFunction:
+                        if module and not str(frame.module.file) == module:
+                            raise Exception("Stopped on a breakpoint but specified module (" + module + ") did not match breakpoint module (" + str(frame.module.file) + ")")
+                        currentFunction = Function(frameFunction.GetName())
+                        cct.addCall(currentFunction)
+                        _recordSubtreeCallsFromThread(currentFunction, thread, module, verbose)
+            process.Continue()
         elif state == lldb.eStateExited:
             break
         else:
