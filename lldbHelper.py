@@ -159,7 +159,7 @@ def recordProcess(executable, pid, module = None, function = None, verbose = Fal
 
     if not function:
         function = "main"
-    target.BreakpointCreateByName(function, target.GetExecutable().GetFilename());
+    target.BreakpointCreateByName(function);
 
     attachInfo = lldb.SBAttachInfo(int(pid))
     error = lldb.SBError()
@@ -180,7 +180,7 @@ def recordCommand(executable, args = [], module = None, function = None, verbose
     # TODO(phil): Launch in a stopped state instead of defaulting to "main".
     if not function:
         function = "main"
-    target.BreakpointCreateByName(function, target.GetExecutable().GetFilename());
+    target.BreakpointCreateByName(function);
 
     process = target.LaunchSimple(args, None, os.getcwd())
     if not process:
