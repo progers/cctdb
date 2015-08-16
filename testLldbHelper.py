@@ -129,7 +129,7 @@ class TestLldbHelper(unittest.TestCase):
         else:
             warnings.warn("Platform not supported for this test")
 
-    def testBasicRecordingWithThreads(self):
+    def testRecordingWithThreads(self):
         if platform.system() == "Darwin":
             executable = "testData/fibonacciThread"
             modules = lldbHelper.listModules(executable)
@@ -137,7 +137,35 @@ class TestLldbHelper(unittest.TestCase):
             self.assertIn("fibonacciThread", fibonacciThreadModule)
 
             cct = lldbHelper.recordCommand(executable, ["3"], fibonacciThreadModule, "computeFibonacci(unsigned long)")
-            self.assertEquals(cct.asJson(), '[{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}]')
+            self.assertEquals(3, len(cct.calls))
+            # Each call to computeFibonacci should have the same subtree.
+            firstCall = cct.calls[0]
+            self.assertEquals(firstCall.asJson(), '{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}')
+            self.assertEquals(firstCall.asJson(), cct.calls[1].asJson())
+            self.assertEquals(firstCall.asJson(), cct.calls[2].asJson())
+
+            # Recording the subtrees starting at fib(unsigned long) should work as well.
+            cct = lldbHelper.recordCommand(executable, ["3"], fibonacciThreadModule, "fib(unsigned long)")
+            self.assertEquals(3, len(cct.calls))
+            firstCall = cct.calls[0]
+            self.assertEquals(firstCall.asJson(), '{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}')
+            self.assertEquals(firstCall.asJson(), cct.calls[1].asJson())
+            self.assertEquals(firstCall.asJson(), cct.calls[2].asJson())
+
+        else:
+            warnings.warn("Platform not supported for this test")
+
+    # Not supported! See comment in lldbHelper.py::_recordSubtreeCallsFromThread.
+    # This test checks for assertions and that that recording works as if new threads never existed.
+    def testRecordingIntoNewThreads(self):
+        if platform.system() == "Darwin":
+            executable = "testData/fibonacciThread"
+            modules = lldbHelper.listModules(executable)
+            fibonacciThreadModule = modules[0];
+            self.assertIn("fibonacciThread", fibonacciThreadModule)
+
+            cct = lldbHelper.recordCommand(executable, ["3"], fibonacciThreadModule, "main")
+            self.assertEquals(cct.asJson(), '[{"name": "main"}]')
         else:
             warnings.warn("Platform not supported for this test")
 

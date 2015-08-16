@@ -81,7 +81,9 @@ def listModules(executable, verbose = False):
 
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
 # a CCT subtree.
-# TODO(phil): support threading in a given subtree.
+# TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
+# callbacks, we'll step over the creation of new threads without stepping into them. There's some
+# discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
 def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
     if not thread:
         return
@@ -119,6 +121,24 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
         elif nextFrameDepth < frameDepth:
             return
 
+# Suspend all running threads except nonStopThread. Returns the threads that were suspended.
+def _suspendOtherThreads(nonStopThread, process):
+    nonStopThreadId = nonStopThread.GetThreadID()
+    suspendedThreads = []
+    for thread in process.threads:
+        if thread.is_suspended:
+            continue
+        threadId = thread.GetThreadID()
+        if threadId == nonStopThreadId:
+            continue
+        thread.Suspend();
+        suspendedThreads.append(thread)
+    return suspendedThreads
+
+def _resumeThreads(threads):
+    for thread in threads:
+        thread.Resume()
+
 # Record a calling context tree from the current process.
 # For each non-nested breakpoint, a top-level call is created in the CCT.
 def _record(process, module, function, verbose):
@@ -148,9 +168,15 @@ def _record(process, module, function, verbose):
                     if frameFunction:
                         if module and not str(frame.module.file.basename) == module:
                             raise Exception("Stopped on a breakpoint but specified module (" + module + ") did not match breakpoint module (" + str(frame.module.file.basename) + ")")
+
+                        suspendedThreads = _suspendOtherThreads(thread, process)
+
                         currentFunction = Function(frameFunction.GetName())
                         cct.addCall(currentFunction)
                         _recordSubtreeCallsFromThread(currentFunction, thread, module, verbose)
+
+                        _resumeThreads(suspendedThreads)
+
             process.Continue()
         elif state == lldb.eStateExited:
             break

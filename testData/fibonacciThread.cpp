@@ -1,8 +1,8 @@
-// A fibonacci program with 3 threads.
+// A fibonacci program with [NUM_THREADS] threads.
 //
-// This program prints the nth fibonacci number. This test program uses NUM_THREADS threads but only
-// does work in thread WORK_THREAD. For simplicty and determinism, the core fibonacci algorithm is
-// not actually multithreaded.
+// This program computes the nth fibonacci number multiple times, each in a different thread. For
+// simplicty and determinism, the core algorithm is not multithreaded. The results of the duplicated
+// work are checked before returning the result.
 //
 // Usage: ./fibonacciThread [n]
 
@@ -11,8 +11,7 @@
 #include <thread>
 
 static const size_t NUM_THREADS = 3;
-static const size_t WORK_THREAD = 2;
-static unsigned long result;
+static unsigned long results[NUM_THREADS];
 
 unsigned long fib(unsigned long n) {
     if (n >= 3)
@@ -21,16 +20,16 @@ unsigned long fib(unsigned long n) {
 }
 
 unsigned long computeFibonacci(unsigned long n) {
+    // no-op call into a different module as a test of record.py.
+    fprintf(stdout, "");
+
     if (n == 0)
         return 0;
     return fib(n);
 }
 
-void computeFibonacciThreaded(unsigned long n, size_t threadId) {
-    // Only do work in one thread.
-    if (threadId != WORK_THREAD)
-        return;
-    result = computeFibonacci(n);
+void computeFibonacciUsingJustOneThread(unsigned long n, size_t threadId) {
+    results[threadId] = computeFibonacci(n);
 }
 
 int main(int argc, char *argv[]) {
@@ -44,11 +43,17 @@ int main(int argc, char *argv[]) {
 
     std::thread threads[NUM_THREADS];
     for (size_t i = 0; i < NUM_THREADS; i++)
-        threads[i] = std::thread(&computeFibonacciThreaded, n, i);
-
+        threads[i] = std::thread(&computeFibonacciUsingJustOneThread, n, i);
     for (size_t i = 0; i < NUM_THREADS; i++)
         threads[i].join();
 
-    fprintf(stdout, "Fibonacci number %lu is %lu\n", n, result);
+    for (size_t i = 1; i < NUM_THREADS; i++) {
+        if (results[0] != results[i]) {
+            fprintf(stderr, "Error: threads do not agree in their fibonacci result\n");
+            return 1;
+        }
+    }
+
+    fprintf(stdout, "Fibonacci number %lu is %lu\n", n, results[0]);
     return 0;
 }
