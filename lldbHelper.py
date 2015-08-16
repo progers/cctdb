@@ -66,7 +66,7 @@ def listFunctions(executable, module = None, verbose = False):
     for module in modules:
         module = target.FindModule(lldb.SBFileSpec(module))
         if not module:
-           raise Exception("Could not find module '" + module + "' in '" + executable + "'")
+           raise Exception("Could not find module '" + str(module.file) + "' in '" + executable + "'")
         functions.extend(_listFunctions(module, verbose))
     return functions
 
