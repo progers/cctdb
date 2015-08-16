@@ -95,6 +95,9 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
         frame = thread.GetFrameAtIndex(0)
         if not frame:
             return
+        if frame.is_inlined:
+            thread.StepInto()
+            continue
         if module and not str(frame.module.file) == module:
             thread.StepOutOfFrame(frame)
             continue
@@ -135,6 +138,8 @@ def _record(process, module, function, verbose):
                 stopReason = thread.GetStopReason()
                 if stopReason == lldb.eStopReasonBreakpoint or stopReason == lldb.eStopReasonPlanComplete:
                     frame = thread.GetFrameAtIndex(0)
+                    if frame.is_inlined:
+                        raise Exception("Breakpoints are not supported on inlined functions.")
                     frameFunction = frame.GetFunction() if frame else None
                     if frameFunction:
                         if module and not str(frame.module.file) == module:

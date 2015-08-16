@@ -11,8 +11,11 @@ testData/fibonacci: testData/fibonacci.cpp
 testData/fibonacciThread: testData/fibonacciThread.cpp
 	g++ -g -Wall -std=c++11 -stdlib=libc++ -O0 -fno-inline testData/fibonacciThread.cpp -o testData/fibonacciThread
 
-tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/fibonacciThread
+testData/complexInlinedTree: testData/complexInlinedTree.cpp
+	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline testData/complexInlinedTree.cpp -o testData/complexInlinedTree
+
+tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/fibonacciThread testData/complexInlinedTree
 	python -m unittest discover
 
 clean:
-	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/fibonacciThread
+	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/fibonacciThread testData/complexInlinedTree

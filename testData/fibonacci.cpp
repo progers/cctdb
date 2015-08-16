@@ -10,8 +10,14 @@
 #include <stdio.h>
 
 unsigned long fib(unsigned long n) {
-    if (n >= 3)
-        return fib(n - 1) + fib(n - 2);
+    if (n >= 3) {
+        unsigned long res = fib(n - 1);
+        if (res == 0)
+            return res;
+        res += fib(n - 2);
+        return res;
+        //return fib(n - 1) + fib(n - 2);
+    }
     return 1;
 }
 
