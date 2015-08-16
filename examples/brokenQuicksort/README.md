@@ -7,7 +7,7 @@ Building
 ---------
 No compile-time instrumentation is needed so lets simply build and run the program:
 ```
-> g++ brokenQuicksort.cpp -O0 -o brokenQuicksort
+> g++ -g brokenQuicksort.cpp -o brokenQuicksort
 
 > ./brokenQuicksort 1 6 3 9 0
     0 1 3 6 9
@@ -28,16 +28,16 @@ Using CCTDB
 Naively recording the entire program can be expensive so we'll scope the recording to a specific module and function.
 Use `listmodules.py` to output a list of modules:
 ```
-> sudo ./listmodules.py examples/brokenQuicksort/brokenQuicksort
+> ./listmodules.py examples/brokenQuicksort/brokenQuicksort
     libsystem_c.dylib
-    brokenQuicksort
+    [path to]/brokenQuicksort
     libmacho.dylib
     ...
 ```
 
-Use `listfunctions.py` to output a list of functions:
+Use `listfunctions.py` to output a list of functions within our module `[path to]/brokenQuicksort`:
 ```
-> sudo ./listfunctions.py examples/brokenQuicksort/brokenQuicksort -m 'brokenQuicksort'
+> ./listfunctions.py examples/brokenQuicksort/brokenQuicksort -m '[path to]/brokenQuicksort'
     main
     sort(int*, int)
     partition(int*, int, int)
@@ -45,10 +45,10 @@ Use `listfunctions.py` to output a list of functions:
     swap(int*, int, int)
 ```
 
-sudo is required because CCTDB uses dtrace which uses kernel-level hooks. Lets use the module `brokenQuicksort` and the function `sort(int*, int))` to compare two runs:
+Lets use the module `[path to]/brokenQuicksort` and the function `sort(int*, int))` to compare two runs:
 ```
-> sudo ./record.py -c '[path]/brokenQuicksort 1 6 3 9 0' -m 'brokenQuicksort' -f 'sort(int*,int)' > good.json
-> sudo ./record.py -c '[path]/brokenQuicksort 1 6 5 9 0' -m 'brokenQuicksort' -f 'sort(int*,int)' > bad.json
+> ./record.py -m '[path to]/brokenQuicksort' -f 'sort(int*,int)' [path]/brokenQuicksort 1 6 3 9 0 > good.json
+> ./record.py -m '[path to]/brokenQuicksort' -f 'sort(int*,int)' [path]/brokenQuicksort 1 6 5 9 0 > bad.json
 
 > ./compare.py good.json bad.json
     bad.json diverged from good.json in 1 places:
