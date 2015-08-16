@@ -143,47 +143,52 @@ class TestLldbHelper(unittest.TestCase):
 
     def testComplexInlinedTree(self):
         if platform.system() == "Darwin":
-            executable = "testData/complexTree"
+            executable = "testData/complexInlinedTree"
             modules = lldbHelper.listModules(executable)
             module = modules[0];
-            self.assertIn("complexTree", module)
+            self.assertIn("complexInlinedTree", module)
 
             cct = lldbHelper.recordCommand(executable, [], module, "A(int&)")
-            self.assertEquals(len(cct.calls), 5)
+            self.assertEquals(len(cct.calls), 2)
 
             # Branch 0
             self.assertEquals(cct.calls[0].asJson(), '{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]}]}]}')
             # Branch 1
             self.assertEquals(cct.calls[1].asJson(), '{"name": "A(int&)"}')
-            # Branch 2
-            self.assertEquals(cct.calls[2].asJson(), '{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "C(int&)"}]}]}')
-            # Branch 3
-            self.assertEquals(cct.calls[3].asJson(), '{"name": "A(int&)"}')
-            # Branch 4
-            #   nothing
-            # Branch 5
-            self.assertEquals(cct.calls[4].asJson(), '{"name": "A(int&)"}')
         else:
             warnings.warn("Platform not supported for this test")
 
     def testComplexInlinedTreeWithDeepBreakpoint(self):
         if platform.system() == "Darwin":
-            executable = "testData/complexTree"
+            executable = "testData/complexInlinedTree"
             modules = lldbHelper.listModules(executable)
             module = modules[0];
-            self.assertIn("complexTree", module)
+            self.assertIn("complexInlinedTree", module)
 
             cct = lldbHelper.recordCommand(executable, [], module, "C(int&)")
-            self.assertEquals(len(cct.calls), 2)
+            self.assertEquals(len(cct.calls), 1)
+            self.assertEquals(cct.calls[0].asJson(), '{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]}')
+        else:
+            warnings.warn("Platform not supported for this test")
+
+    def testComplexInlinedCases(self):
+        if platform.system() == "Darwin":
+            executable = "testData/complexInlinedCases"
+            modules = lldbHelper.listModules(executable)
+            module = modules[0];
+            self.assertIn("complexInlinedCases", module)
+
+            cct = lldbHelper.recordCommand(executable, [], module, "A(int&)")
+            self.assertEquals(len(cct.calls), 3)
 
             # Branch 0
-            self.assertEquals(cct.calls[0].asJson(), '{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]}')
+            self.assertEquals(cct.calls[0].asJson(), '{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "C(int&)"}]}]}')
             # Branch 1
-            #   nothing
+            self.assertEquals(cct.calls[1].asJson(), '{"name": "A(int&)"}')
             # Branch 2
-            self.assertEquals(cct.calls[1].asJson(), '{"name": "C(int&)"}')
-            # Branches 3-5
-            #   nothing
+            #  empty
+            # Branch 3
+            self.assertEquals(cct.calls[2].asJson(), '{"name": "A(int&)"}')
         else:
             warnings.warn("Platform not supported for this test")
 
