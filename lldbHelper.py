@@ -66,7 +66,7 @@ def listFunctions(executable, module = None, verbose = False):
     for module in modules:
         module = target.FindModule(lldb.SBFileSpec(module))
         if not module:
-           raise Exception("Could not find module '" + str(module.file) + "' in '" + executable + "'")
+           raise Exception("Could not find module '" + str(module.file.basename) + "' in '" + executable + "'")
         functions.extend(_listFunctions(module, verbose))
     return functions
 
@@ -76,7 +76,7 @@ def listModules(executable, verbose = False):
     target = _getTarget(executable, verbose)
     modules = []
     for module in target.modules:
-        modules.append(str(module.file))
+        modules.append(module.file.basename)
     return modules
 
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
@@ -94,16 +94,20 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
         frame = thread.GetFrameAtIndex(0)
         if not frame:
             return
-        if module and not str(frame.module.file) == module:
-            thread.StepOutOfFrame(frame)
-            continue
 
         thread.StepInto()
         frame = thread.GetFrameAtIndex(0)
+
+        # Stay within our specified module.
+        if module and not str(frame.module.file.basename) == module:
+            thread.StepOutOfFrame(frame)
+            continue
+
+        # Ignore inlined functions because the frame depth becomes unreliable.
         if frame.is_inlined:
-            # Ignore inlined functions because the frame depth becomes unreliable.
             thread.StepInto()
             continue
+
         nextFrameDepth = thread.GetNumFrames()
         if nextFrameDepth > frameDepth:
             function = frame.GetFunction()
@@ -142,8 +146,8 @@ def _record(process, module, function, verbose):
                         raise Exception("Breakpoints are not supported on inlined functions.")
                     frameFunction = frame.GetFunction() if frame else None
                     if frameFunction:
-                        if module and not str(frame.module.file) == module:
-                            raise Exception("Stopped on a breakpoint but specified module (" + module + ") did not match breakpoint module (" + str(frame.module.file) + ")")
+                        if module and not str(frame.module.file.basename) == module:
+                            raise Exception("Stopped on a breakpoint but specified module (" + module + ") did not match breakpoint module (" + str(frame.module.file.basename) + ")")
                         currentFunction = Function(frameFunction.GetName())
                         cct.addCall(currentFunction)
                         _recordSubtreeCallsFromThread(currentFunction, thread, module, verbose)

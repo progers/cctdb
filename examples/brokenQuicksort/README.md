@@ -30,14 +30,14 @@ Use `listmodules.py` to output a list of modules:
 ```
 > ./listmodules.py examples/brokenQuicksort/brokenQuicksort
     libsystem_c.dylib
-    [path to]/brokenQuicksort
+    brokenQuicksort
     libmacho.dylib
     ...
 ```
 
-Use `listfunctions.py` to output a list of functions within our module `[path to]/brokenQuicksort`:
+Use `listfunctions.py` to output a list of functions within our module `brokenQuicksort`:
 ```
-> ./listfunctions.py examples/brokenQuicksort/brokenQuicksort -m '[path to]/brokenQuicksort'
+> ./listfunctions.py examples/brokenQuicksort/brokenQuicksort -m 'brokenQuicksort'
     main
     sort(int*, int)
     partition(int*, int, int)
@@ -45,10 +45,10 @@ Use `listfunctions.py` to output a list of functions within our module `[path to
     swap(int*, int, int)
 ```
 
-Lets use the module `[path to]/brokenQuicksort` and the function `sort(int*, int))` to compare two runs:
+Lets use the module `brokenQuicksort` and the function `sort(int*, int))` to compare two runs:
 ```
-> ./record.py -m '[path to]/brokenQuicksort' -f 'sort(int*,int)' [path]/brokenQuicksort 1 6 3 9 0 > good.json
-> ./record.py -m '[path to]/brokenQuicksort' -f 'sort(int*,int)' [path]/brokenQuicksort 1 6 5 9 0 > bad.json
+> ./record.py -m 'brokenQuicksort' -f 'sort(int*,int)' [path]/brokenQuicksort 1 6 3 9 0 > good.json
+> ./record.py -m 'brokenQuicksort' -f 'sort(int*,int)' [path]/brokenQuicksort 1 6 5 9 0 > bad.json
 
 > ./compare.py good.json bad.json
     bad.json diverged from good.json in 1 places:

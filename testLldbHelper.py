@@ -26,11 +26,11 @@ class TestLldbHelper(unittest.TestCase):
     def testListModules(self):
         if platform.system() == "Darwin":
             modules = lldbHelper.listModules("examples/brokenQuicksort/brokenQuicksort")
-            self.assertIn("/usr/lib/dyld", modules)
-            self.assertIn("/usr/lib/libc++abi.dylib", modules)
+            self.assertIn("dyld", modules)
+            self.assertIn("libc++abi.dylib", modules)
             brokenQuicksortModuleFound = False
             for module in modules:
-                if "examples/brokenQuicksort/brokenQuicksort" in module:
+                if "brokenQuicksort" in module:
                     brokenQuicksortModuleFound = True
                     break
             self.assertTrue(brokenQuicksortModuleFound)
