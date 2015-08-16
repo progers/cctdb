@@ -81,7 +81,6 @@ def listModules(executable, verbose = False):
 
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
 # a CCT subtree.
-# TODO(phil): support inlined functions.
 # TODO(phil): support threading in a given subtree.
 def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
     if not thread:
@@ -95,15 +94,16 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
         frame = thread.GetFrameAtIndex(0)
         if not frame:
             return
-        if frame.is_inlined:
-            thread.StepInto()
-            continue
         if module and not str(frame.module.file) == module:
             thread.StepOutOfFrame(frame)
             continue
 
         thread.StepInto()
         frame = thread.GetFrameAtIndex(0)
+        if frame.is_inlined:
+            # Ignore inlined functions because the frame depth becomes unreliable.
+            thread.StepInto()
+            continue
         nextFrameDepth = thread.GetNumFrames()
         if nextFrameDepth > frameDepth:
             function = frame.GetFunction()

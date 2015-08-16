@@ -152,7 +152,7 @@ class TestLldbHelper(unittest.TestCase):
             self.assertEquals(len(cct.calls), 2)
 
             # Branch 0
-            self.assertEquals(cct.calls[0].asJson(), '{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]}]}]}')
+            self.assertEquals(cct.calls[0].asJson(), '{"name": "A(int&)", "calls": [{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]}')
             # Branch 1
             self.assertEquals(cct.calls[1].asJson(), '{"name": "A(int&)"}')
         else:
@@ -167,7 +167,7 @@ class TestLldbHelper(unittest.TestCase):
 
             cct = lldbHelper.recordCommand(executable, [], module, "C(int&)")
             self.assertEquals(len(cct.calls), 1)
-            self.assertEquals(cct.calls[0].asJson(), '{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]}')
+            self.assertEquals(cct.calls[0].asJson(), '{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}')
         else:
             warnings.warn("Platform not supported for this test")
 
@@ -182,7 +182,7 @@ class TestLldbHelper(unittest.TestCase):
             self.assertEquals(len(cct.calls), 3)
 
             # Branch 0
-            self.assertEquals(cct.calls[0].asJson(), '{"name": "A(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "C(int&)"}]}]}')
+            self.assertEquals(cct.calls[0].asJson(), '{"name": "A(int&)", "calls": [{"name": "C(int&)"}]}')
             # Branch 1
             self.assertEquals(cct.calls[1].asJson(), '{"name": "A(int&)"}')
             # Branch 2
