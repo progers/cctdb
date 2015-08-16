@@ -136,7 +136,7 @@ def _record(process, module, function, verbose):
         if state == lldb.eStateStopped:
             for thread in process.threads:
                 stopReason = thread.GetStopReason()
-                if stopReason == lldb.eStopReasonBreakpoint or stopReason == lldb.eStopReasonPlanComplete:
+                if stopReason == lldb.eStopReasonBreakpoint:
                     frame = thread.GetFrameAtIndex(0)
                     if frame.is_inlined:
                         raise Exception("Breakpoints are not supported on inlined functions.")
