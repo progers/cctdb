@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# listmodules.py - List all modules in an executable.
+# listModules.py - List all modules in an executable.
 
 import argparse
 import lldbHelper

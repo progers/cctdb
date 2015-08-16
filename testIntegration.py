@@ -13,7 +13,7 @@ class TestRecord(unittest.TestCase):
         function = "sort(int*, int)"
 
         # Ensure we can list our module.
-        command = "./listmodules.py " + executable
+        command = "./listModules.py " + executable
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
         self.assertEqual(0, proc.returncode)
@@ -23,7 +23,7 @@ class TestRecord(unittest.TestCase):
         self.assertIn(module, modules)
 
         # Ensure we can list our function.
-        command = "./listfunctions.py -m '" + module + "' " + executable
+        command = "./listFunctions.py -m '" + module + "' " + executable
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
         self.assertEqual(0, proc.returncode)

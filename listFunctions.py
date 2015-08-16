@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# listfunctions.py - List all functions in an executable.
+# listFunctions.py - List all functions in an executable.
 
 import argparse
 import lldbHelper

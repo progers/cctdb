@@ -26,18 +26,18 @@ Using CCTDB
 --------
 
 Naively recording the entire program can be expensive so we'll scope the recording to a specific module and function.
-Use `listmodules.py` to output a list of modules:
+Use `listModules.py` to output a list of modules:
 ```
-> ./listmodules.py examples/brokenQuicksort/brokenQuicksort
+> ./listModules.py examples/brokenQuicksort/brokenQuicksort
     libsystem_c.dylib
     brokenQuicksort
     libmacho.dylib
     ...
 ```
 
-Use `listfunctions.py` to output a list of functions within our module `brokenQuicksort`:
+Use `listFunctions.py` to output a list of functions within our module `brokenQuicksort`:
 ```
-> ./listfunctions.py examples/brokenQuicksort/brokenQuicksort -m 'brokenQuicksort'
+> ./listFunctions.py examples/brokenQuicksort/brokenQuicksort -m 'brokenQuicksort'
     main
     sort(int*, int)
     partition(int*, int, int)

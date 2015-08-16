@@ -9,11 +9,11 @@ Tutorial
 ---------
 The first step is to find module and function symbols for some high-level entry point in the program (e.g., `main()`).
 ```
-> ./listmodules.py '[your program]'
+> ./listModules.py '[your program]'
     moduleA
     moduleB
     ...
-> ./listfunctions.py '[your program]' -m 'moduleA'
+> ./listFunctions.py '[your program]' -m 'moduleA'
     int main()
     void functionA()
     int functionB(int, char)
