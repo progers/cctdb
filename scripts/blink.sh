@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Helper script for launching content shell, grabbing the renderer pid, and launching another
-# command with -p [renderer pid]
+# command with "RENDERERPID" replaced with the renderer pid
 #
 # Usage:
 # blink.sh [content_shell_and_args] [command_to_run_with_renderer_pid]
 #
 # Example:
-# sudo scripts/blink.sh "/Users/pdr/Desktop/chromium/src/out/Release/Content\ Shell.app/Contents/MacOS/Content\ Shell --renderer-startup-dialog --dump-render-tree about://blank" "./record.py -f 'blink::FrameView::layout()' -m 'libwebcore_shared.dylib' -o test.json"
+# ./scripts/blink.sh "/Users/pdr/Desktop/chromium/src/out/Release/Content\ Shell.app/Contents/MacOS/Content\ Shell --renderer-startup-dialog --dump-render-tree a.html" "./record.py -f 'blink::LayoutSVGShape::layout()' -m 'libwebcore_shared.dylib' /Users/pdr/Desktop/chromium/src/out/Release/Content\ Shell.app/Contents/MacOS/Content\ Shell --pid=RENDERERPID > test.json"
 
 echo "Starting blink renderer..."
 echo "running [$1]"
@@ -19,17 +19,9 @@ eval $1 2>&1 | {
     # Match [19.....cc(131)] Renderer (1952) paused waiting for deb...
     if [[ $line =~ ^\[.+\][[:space:]]Renderer[[:space:]].([0-9]+).*$ ]] ; then
         pid="${BASH_REMATCH[1]}"
-        command="$2 -p $pid &"
+        command="${2/RENDERERPID/$pid}"
         echo "Found renderer pid ($pid). Running command [$command]"
         eval $command
-
-        # Super hacky. We start dtrace on the renderer in a stopped state in the background
-        # then wait 1.3s and kick the renderer. Hope 1.3s enough for dtrace to init!
-        command="sleep 1.3 && kill -SIGUSR1 $pid"
-        echo "Unpausing renderer by sending SIGUSR1 with command [$command]"
-        eval $command
-
-        wait
     fi
   done
 }
