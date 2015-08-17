@@ -93,9 +93,6 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
         stopReason = thread.GetStopReason()
         if not (stopReason == lldb.eStopReasonPlanComplete or stopReason == lldb.eStopReasonBreakpoint):
             return
-        frame = thread.GetFrameAtIndex(0)
-        if not frame:
-            return
 
         thread.StepInto()
         frame = thread.GetFrameAtIndex(0)
