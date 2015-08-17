@@ -47,7 +47,7 @@ Now record a second CCT but on a run of the program that contains a bug:
 Lastly, compare the two runs.
 ```
 > ./compare.py good.json bad.json
-    good.json diverged from badrecording.json in 1 places:
+    good.json diverged from bad.json in 1 places:
         void thirdFunction(...) which was called by int main()
 ```
 
