@@ -220,5 +220,17 @@ class TestLldbHelper(unittest.TestCase):
         else:
             warnings.warn("Platform not supported for this test")
 
+    def testSingleInstructionInline(self):
+        if platform.system() == "Darwin":
+            executable = "testData/singleInstructionInline"
+            modules = lldbHelper.listModules(executable)
+            module = modules[0];
+            self.assertIn("singleInstructionInline", module)
+
+            cct = lldbHelper.recordCommand(executable, [], module, "A()")
+            self.assertEquals(cct.asJson(), '[{"name": "A()", "calls": [{"name": "C()", "calls": [{"name": "D()"}]}]}]')
+        else:
+            warnings.warn("Platform not supported for this test")
+
 if __name__ == "__main__":
     unittest.main()

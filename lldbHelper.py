@@ -106,7 +106,6 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose, initialFrameDept
 
         # Ignore inlined functions because the frame depth becomes unreliable.
         if frame.is_inlined:
-            thread.StepInto()
             continue
 
         frameDepth = thread.GetNumFrames()
