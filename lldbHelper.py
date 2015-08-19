@@ -84,11 +84,13 @@ def listModules(executable, verbose = False):
 # TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
 # callbacks, we'll step over the creation of new threads without stepping into them. There's some
 # discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
-def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
+def _recordSubtreeCallsFromThread(cct, thread, module, verbose, initialFrameDepth = None):
     if not thread:
         return
 
-    frameDepth = thread.GetNumFrames()
+    if not initialFrameDepth:
+        initialFrameDepth = thread.GetNumFrames()
+
     while True:
         stopReason = thread.GetStopReason()
         if not (stopReason == lldb.eStopReasonPlanComplete or stopReason == lldb.eStopReasonBreakpoint):
@@ -107,15 +109,15 @@ def _recordSubtreeCallsFromThread(cct, thread, module, verbose):
             thread.StepInto()
             continue
 
-        nextFrameDepth = thread.GetNumFrames()
-        if nextFrameDepth > frameDepth:
+        frameDepth = thread.GetNumFrames()
+        if frameDepth > initialFrameDepth:
             function = frame.GetFunction()
             if not function:
                 continue
-            nextFunctionCall = Function(function.GetName())
-            cct.addCall(nextFunctionCall)
-            _recordSubtreeCallsFromThread(nextFunctionCall, thread, module, verbose)
-        elif nextFrameDepth < frameDepth:
+            functionCall = Function(function.GetName())
+            cct.addCall(functionCall)
+            _recordSubtreeCallsFromThread(functionCall, thread, module, verbose, frameDepth)
+        elif frameDepth < initialFrameDepth:
             return
 
 # Suspend all running threads except nonStopThread. Returns the threads that were suspended.
