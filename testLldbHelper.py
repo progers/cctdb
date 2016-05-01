@@ -16,7 +16,6 @@ class TestLldbHelper(unittest.TestCase):
     def testBadModule(self):
         if platform.system() == "Darwin":
             executable = "examples/brokenQuicksort/brokenQuicksort"
-            modules = lldbHelper.listModules(executable)
             with self.assertRaises(Exception) as cm:
                 cct = lldbHelper.recordCommand(executable, ["1"], "ModuleThatDoesNotExist", "main")
             self.assertIn("Unable to find specified module in target.", cm.exception.message)
