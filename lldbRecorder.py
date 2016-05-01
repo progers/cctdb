@@ -14,11 +14,32 @@ class lldbRecorder:
         self._target = lldb.SBDebugger.Create().CreateTarget(self._executable)
         if not self._target:
             raise Exception("Could not create target '" + self._executable + "'")
+        # TODO(phil): Is this needed?
+        self._target.GetDebugger().SetAsync(False)
 
-    def launchProcess(self, args = []):
+    def launchProcess(self, args = [], stopAtFunctionName = None):
+        # TODO(phil): Launch in a stopped state instead of defaulting to "main".
+        if not stopAtFunctionName:
+            stopAtFunctionName = "main"
+        self._target.BreakpointCreateByName(stopAtFunctionName)
+
         process = self._target.LaunchSimple(args, None, os.getcwd())
         if not process:
             raise Exception("Could not launch '" + self._executable + "' with args '" + ",".join(args) + "'")
+
+    def attachToProcess(self, pid, stopAtFunctionName = None):
+        # TODO(phil): Launch in a stopped state instead of defaulting to "main".
+        if not stopAtFunctionName:
+            stopAtFunctionName = "main"
+        self._target.BreakpointCreateByName(stopAtFunctionName)
+
+        attachInfo = lldb.SBAttachInfo(int(pid))
+        error = lldb.SBError()
+        process = self._target.Attach(attachInfo, error)
+        if error.Fail():
+            raise Exception("Error attaching to process: " + error.description)
+        if not process:
+            raise Exception("Unable to attach to process")
 
     def getModules(self):
         # TODO(phil): This will not find modules in subprocesses. Not sure that can be fixed.
@@ -44,6 +65,122 @@ class lldbRecorder:
             functions.extend(self.getFunctionsInModule(module))
         return functions
 
+    # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
+    # a CCT subtree.
+    # TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
+    # callbacks, we'll step over the creation of new threads without stepping into them. There's some
+    # discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
+    def _recordSubtreeCallsFromThread(self, cct, thread, moduleName, initialFrameDepth = None):
+        if not thread:
+            return
+
+        if not initialFrameDepth:
+            initialFrameDepth = thread.GetNumFrames()
+
+        while True:
+            stopReason = thread.GetStopReason()
+            if not (stopReason == lldb.eStopReasonPlanComplete or stopReason == lldb.eStopReasonBreakpoint):
+                return
+
+            thread.StepInto()
+            frame = thread.GetFrameAtIndex(0)
+
+            # Stay within our specified module.
+            if moduleName and not str(frame.module.file.basename) == moduleName:
+                thread.StepOutOfFrame(frame)
+                continue
+
+            # Ignore inlined functions because the frame depth becomes unreliable.
+            if frame.is_inlined:
+                continue
+
+            frameDepth = thread.GetNumFrames()
+            if frameDepth > initialFrameDepth:
+                function = frame.GetFunction()
+                if not function:
+                    continue
+                functionCall = Function(function.GetName())
+                cct.addCall(functionCall)
+                self._recordSubtreeCallsFromThread(functionCall, thread, moduleName, frameDepth)
+            elif frameDepth < initialFrameDepth:
+                return
+
+    # Suspend all running threads except nonStopThread. Returns the threads that were suspended.
+    def _suspendOtherThreads(self, nonStopThread, process):
+        nonStopThreadId = nonStopThread.GetThreadID()
+        suspendedThreads = []
+        for thread in process.threads:
+            if thread.is_suspended:
+                continue
+            threadId = thread.GetThreadID()
+            if threadId == nonStopThreadId:
+                continue
+            thread.Suspend()
+            suspendedThreads.append(thread)
+        return suspendedThreads
+
+    def _resumeThreads(self, threads):
+        for thread in threads:
+            thread.Resume()
+
+    # Record a calling context tree from the current process.
+    # For each non-nested breakpoint, a top-level call is created in the CCT.
+    def record(self, moduleName = None, functionName = None):
+        process = self._target.GetProcess()
+        if not process:
+            raise Exception("No running process found")
+
+        if moduleName:
+            foundModule = self._target.FindModule(lldb.SBFileSpec(moduleName))
+            if not foundModule.IsValid():
+                raise Exception("Unable to find specified module in target.")
+
+        # TODO(phil): Cleanup how we initially start with a breakpoint.
+        if not functionName:
+            functionName = "main"
+        if self._target.num_breakpoints <= 0:
+            raise Exception("Failed to create function breakpoint.")
+        else:
+            for breakpoint in self._target.breakpoint_iter():
+                if breakpoint.GetNumLocations() <= 0:
+                    raise Exception("Function '" + functionName + "' was not found.")
+
+        cct = CCT()
+        while True:
+            state = process.GetState()
+            if state == lldb.eStateStopped:
+                for thread in process.threads:
+                    stopReason = thread.GetStopReason()
+                    if stopReason == lldb.eStopReasonBreakpoint:
+                        frame = thread.GetFrameAtIndex(0)
+                        if frame.is_inlined:
+                            raise Exception("Breakpoints are not supported on inlined functions.")
+                        frameFunction = frame.GetFunction() if frame else None
+                        if frameFunction:
+                            if moduleName and not str(frame.module.file.basename) == moduleName:
+                                raise Exception("Stopped on a breakpoint but specified module (" + moduleName + ") did not match breakpoint module (" + str(frame.module.file.basename) + ")")
+
+                            suspendedThreads = self._suspendOtherThreads(thread, process)
+
+                            currentFunction = Function(frameFunction.GetName())
+                            cct.addCall(currentFunction)
+                            self._recordSubtreeCallsFromThread(currentFunction, thread, moduleName)
+
+                            self._resumeThreads(suspendedThreads)
+
+                process.Continue()
+            elif state == lldb.eStateExited:
+                break
+            else:
+                stateString = self._target.GetDebugger().StateAsCString(state)
+                process.Kill()
+                raise Exception("Unexpected process state '" + stateString + "'")
+                break
+        return cct
+
     def __del__(self):
         if self._target and self._target.GetDebugger():
             self._target.GetDebugger().Terminate()
+        # TODO(phil): Is this needed?
+        if self._target:
+            self._target.Clear()

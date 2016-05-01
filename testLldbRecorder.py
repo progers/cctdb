@@ -23,7 +23,6 @@ class TestLldbRecorder(unittest.TestCase):
                 brokenQuicksortModuleFound = True
                 break
         self.assertTrue(brokenQuicksortModuleFound)
-        del modules
 
     def testGetAllFunctions(self):
         functions = lldbRecorder("examples/brokenQuicksort/brokenQuicksort").getAllFunctions()
@@ -42,6 +41,13 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertIn("main", functions)
         self.assertIn("swap(int*, int, int)", functions)
         self.assertIn("quicksort(int*, int, int)", functions)
+
+    def testRecordBadModule(self):
+        recorder = lldbRecorder("examples/brokenQuicksort/brokenQuicksort")
+        recorder.launchProcess(["1"])
+        with self.assertRaises(Exception) as cm:
+            cct = recorder.record("ModuleThatDoesNotExist", "main")
+        self.assertIn("Unable to find specified module in target.", cm.exception.message)
 
 if __name__ == "__main__":
     if platform.system() != "Darwin":
