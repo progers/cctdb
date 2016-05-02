@@ -96,6 +96,37 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertEquals(cct.asJson(), '[{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}]')
         self.assertIn("Fibonacci number 3 is 2", proc.stdout.read())
 
+    def testRecordingWithThreads(self):
+        executable = "testData/fibonacciThread"
+        fibonacciModuleName = lldbRecorder(executable).getModuleNames()[0]
+        self.assertIn("fibonacciThread", fibonacciModuleName)
+
+        cct = lldbRecorder(executable).launchProcessThenRecord(["3"], fibonacciModuleName, "computeFibonacci(unsigned long)")
+        self.assertEquals(3, len(cct.calls))
+        # Each call to computeFibonacci should have the same subtree.
+        firstCall = cct.calls[0]
+        self.assertEquals(firstCall.asJson(), '{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}')
+        self.assertEquals(firstCall.asJson(), cct.calls[1].asJson())
+        self.assertEquals(firstCall.asJson(), cct.calls[2].asJson())
+
+        # Recording the subtrees starting at fib(unsigned long) should work as well.
+        cct = lldbRecorder(executable).launchProcessThenRecord(["3"], fibonacciModuleName, "fib(unsigned long)")
+        self.assertEquals(3, len(cct.calls))
+        firstCall = cct.calls[0]
+        self.assertEquals(firstCall.asJson(), '{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}')
+        self.assertEquals(firstCall.asJson(), cct.calls[1].asJson())
+        self.assertEquals(firstCall.asJson(), cct.calls[2].asJson())
+
+    # Not supported! See comment in lldbHelper.py::_recordSubtreeCallsFromThread.
+    # This test checks for assertions and that that recording works as if new threads never existed.
+    def testRecordingIntoNewThreads(self):
+        recorder = lldbRecorder("testData/fibonacciThread")
+        fibonacciThreadModuleName = recorder.getModuleNames()[0];
+        self.assertIn("fibonacciThread", fibonacciThreadModuleName)
+
+        cct = recorder.launchProcessThenRecord(["3"], fibonacciThreadModuleName, "main")
+        self.assertEquals(cct.asJson(), '[{"name": "main"}]')
+
 if __name__ == "__main__":
     if platform.system() != "Darwin":
         warnings.warn("Platform '" + str(platform.system()) + "' may not support the full lldb API")
