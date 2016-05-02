@@ -180,7 +180,4 @@ class lldbRecorder:
 
     def __del__(self):
         if self._target and self._target.GetDebugger():
-            self._target.GetDebugger().Terminate()
-        # TODO(phil): Is this needed?
-        if self._target:
-            self._target.Clear()
+            self._target.GetDebugger().DeleteTarget(self._target)
