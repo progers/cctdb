@@ -18,16 +18,6 @@ class lldbRecorder:
         self._target.GetDebugger().SetAsync(False)
         self._recording = False
 
-    def _createBreakpoint(self, functionName):
-        self._target.BreakpointCreateByName(functionName)
-
-        if self._target.num_breakpoints <= 0:
-            raise Exception("Failed to create function breakpoint.")
-        else:
-            for breakpoint in self._target.breakpoint_iter():
-                if breakpoint.GetNumLocations() <= 0:
-                    raise Exception("Function '" + functionName + "' was not found.")
-
     def launchProcessThenRecord(self, args = [], moduleName = None, functionName = None):
         if not functionName:
             functionName = "main"
@@ -75,6 +65,16 @@ class lldbRecorder:
         for moduleName in self.getModuleNames():
             functionNames.extend(self.getFunctionNamesWithModuleName(moduleName))
         return functionNames
+
+    def _createBreakpoint(self, functionName):
+        self._target.BreakpointCreateByName(functionName)
+
+        if self._target.num_breakpoints <= 0:
+            raise Exception("Failed to create function breakpoint.")
+        else:
+            for breakpoint in self._target.breakpoint_iter():
+                if breakpoint.GetNumLocations() <= 0:
+                    raise Exception("Function '" + functionName + "' was not found.")
 
     # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
     # a CCT subtree.
