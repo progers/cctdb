@@ -14,15 +14,15 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertEqual(cm.exception.message, "Could not create target 'does/not/exist'")
 
     def testGetModuleNames(self):
-        moduleNames = lldbRecorder("examples/brokenQuicksort/brokenQuicksort").getModuleNames()
+        moduleNames = lldbRecorder("testData/quicksort").getModuleNames()
         self.assertIn("dyld", moduleNames)
         self.assertIn("libc++abi.dylib", moduleNames)
-        brokenQuicksortModuleFound = False
+        quicksortModuleFound = False
         for moduleName in moduleNames:
-            if "brokenQuicksort" in moduleName:
-                brokenQuicksortModuleFound = True
+            if "quicksort" in moduleName:
+                quicksortModuleFound = True
                 break
-        self.assertTrue(brokenQuicksortModuleFound)
+        self.assertTrue(quicksortModuleFound)
 
     def testGetAllFunctions(self):
         functionNames = lldbRecorder("testData/quicksort").getAllFunctionNames()
