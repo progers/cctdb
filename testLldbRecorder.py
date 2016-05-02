@@ -42,12 +42,30 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertIn("swap(int*, int, int)", functions)
         self.assertIn("quicksort(int*, int, int)", functions)
 
-    def testRecordBadModule(self):
+    def testBasicRecordingAtMain(self):
         recorder = lldbRecorder("examples/brokenQuicksort/brokenQuicksort")
-        recorder.launchProcess(["1"])
+        modules = recorder.getModules()
+        brokenQuicksortModule = modules[0]
+        self.assertIn("brokenQuicksort", brokenQuicksortModule)
+
+        cct = recorder.launchProcessThenRecord(["1"], brokenQuicksortModule)
+        self.assertEquals(cct.asJson(), '[{"name": "main", "calls": [{"name": "sort(int*, int)", "calls": [{"name": "quicksort(int*, int, int)"}]}]}]')
+
+    def testRecordMissingModule(self):
+        recorder = lldbRecorder("examples/brokenQuicksort/brokenQuicksort")
         with self.assertRaises(Exception) as cm:
-            cct = recorder.record("ModuleThatDoesNotExist", "main")
+            cct = recorder.launchProcessThenRecord(["1"], "ModuleThatDoesNotExist")
         self.assertIn("Unable to find specified module in target.", cm.exception.message)
+
+    def testRecordMissingFunction(self):
+        recorder = lldbRecorder("testData/fibonacci")
+        modules = recorder.getModules()
+        fibonacciModuleName = modules[0]
+        self.assertIn("fibonacci", fibonacciModuleName)
+
+        with self.assertRaises(Exception) as cm:
+            cct = recorder.launchProcessThenRecord(["3"], fibonacciModuleName, "functionDoesNotExist")
+        self.assertIn("Function 'functionDoesNotExist' was not found.", cm.exception.message)
 
 if __name__ == "__main__":
     if platform.system() != "Darwin":

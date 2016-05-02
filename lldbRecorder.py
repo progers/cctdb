@@ -17,21 +17,30 @@ class lldbRecorder:
         # TODO(phil): Is this needed?
         self._target.GetDebugger().SetAsync(False)
 
-    def launchProcess(self, args = [], stopAtFunctionName = None):
-        # TODO(phil): Launch in a stopped state instead of defaulting to "main".
-        if not stopAtFunctionName:
-            stopAtFunctionName = "main"
-        self._target.BreakpointCreateByName(stopAtFunctionName)
+    def _createBreakpoint(self, functionName):
+        self._target.BreakpointCreateByName(functionName)
 
+        if self._target.num_breakpoints <= 0:
+            raise Exception("Failed to create function breakpoint.")
+        else:
+            for breakpoint in self._target.breakpoint_iter():
+                if breakpoint.GetNumLocations() <= 0:
+                    raise Exception("Function '" + functionName + "' was not found.")
+
+    def launchProcessThenRecord(self, args = [], moduleName = None, functionName = None):
+        if not functionName:
+            functionName = "main"
+        self._createBreakpoint(functionName)
         process = self._target.LaunchSimple(args, None, os.getcwd())
         if not process:
             raise Exception("Could not launch '" + self._executable + "' with args '" + ",".join(args) + "'")
+        return self._recordFromBreakpoint(moduleName)
 
-    def attachToProcess(self, pid, stopAtFunctionName = None):
+    def attachToProcessThenRecord(self, pid, moduleName = None, functionName = None):
         # TODO(phil): Launch in a stopped state instead of defaulting to "main".
-        if not stopAtFunctionName:
-            stopAtFunctionName = "main"
-        self._target.BreakpointCreateByName(stopAtFunctionName)
+        if not functionName:
+            functionName = "main"
+        self._createBreakpoint(functionName)
 
         attachInfo = lldb.SBAttachInfo(int(pid))
         error = lldb.SBError()
@@ -40,6 +49,7 @@ class lldbRecorder:
             raise Exception("Error attaching to process: " + error.description)
         if not process:
             raise Exception("Unable to attach to process")
+        return self._recordFromBreakpoint(moduleName)
 
     def getModules(self):
         # TODO(phil): This will not find modules in subprocesses. Not sure that can be fixed.
@@ -125,7 +135,7 @@ class lldbRecorder:
 
     # Record a calling context tree from the current process.
     # For each non-nested breakpoint, a top-level call is created in the CCT.
-    def record(self, moduleName = None, functionName = None):
+    def _recordFromBreakpoint(self, moduleName = None):
         process = self._target.GetProcess()
         if not process:
             raise Exception("No running process found")
@@ -135,15 +145,8 @@ class lldbRecorder:
             if not foundModule.IsValid():
                 raise Exception("Unable to find specified module in target.")
 
-        # TODO(phil): Cleanup how we initially start with a breakpoint.
-        if not functionName:
-            functionName = "main"
         if self._target.num_breakpoints <= 0:
             raise Exception("Failed to create function breakpoint.")
-        else:
-            for breakpoint in self._target.breakpoint_iter():
-                if breakpoint.GetNumLocations() <= 0:
-                    raise Exception("Function '" + functionName + "' was not found.")
 
         cct = CCT()
         while True:
