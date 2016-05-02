@@ -16,6 +16,7 @@ class lldbRecorder:
             raise Exception("Could not create target '" + self._executable + "'")
         # TODO(phil): Is this needed?
         self._target.GetDebugger().SetAsync(False)
+        self._recording = False
 
     def _createBreakpoint(self, functionName):
         self._target.BreakpointCreateByName(functionName)
@@ -51,29 +52,29 @@ class lldbRecorder:
             raise Exception("Unable to attach to process")
         return self._recordFromBreakpoint(moduleName)
 
-    def getModules(self):
+    def getModuleNames(self):
         # TODO(phil): This will not find modules in subprocesses. Not sure that can be fixed.
-        modules = []
+        moduleNames = []
         for module in self._target.modules:
-            modules.append(module.file.basename)
-        return modules
+            moduleNames.append(module.file.basename)
+        return moduleNames
 
-    def getFunctionsInModule(self, moduleString):
+    def getFunctionNamesWithModuleName(self, moduleName):
         # TODO(phil): Is this really the best way to list all functions?
-        functions = []
-        module = self._target.FindModule(lldb.SBFileSpec(moduleString))
+        functionNames = []
+        module = self._target.FindModule(lldb.SBFileSpec(moduleName))
         if not module:
-            raise Exception("Could not find module '" + moduleString + "'")
+            raise Exception("Could not find module '" + moduleName + "'")
         for symbol in module.symbols:
             if symbol.type == lldb.eSymbolTypeCode:
-                functions.append(symbol.name)
-        return functions
+                functionNames.append(symbol.name)
+        return functionNames
 
-    def getAllFunctions(self):
-        functions = []
-        for module in self.getModules():
-            functions.extend(self.getFunctionsInModule(module))
-        return functions
+    def getAllFunctionNames(self):
+        functionNames = []
+        for moduleName in self.getModuleNames():
+            functionNames.extend(self.getFunctionNamesWithModuleName(moduleName))
+        return functionNames
 
     # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
     # a CCT subtree.
@@ -136,6 +137,9 @@ class lldbRecorder:
     # Record a calling context tree from the current process.
     # For each non-nested breakpoint, a top-level call is created in the CCT.
     def _recordFromBreakpoint(self, moduleName = None):
+        if self._recording:
+            raise Exception("Cannot record process that is already being recorded.")
+        self._recording = True
         process = self._target.GetProcess()
         if not process:
             raise Exception("No running process found")
