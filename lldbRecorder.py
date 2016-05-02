@@ -2,8 +2,6 @@
 
 import lldb
 from cct import CCT, Function
-import commands
-import optparse
 import os
 import platform
 import sys
