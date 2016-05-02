@@ -8,6 +8,9 @@ examples/brokenQuicksort/brokenQuicksort: examples/brokenQuicksort/brokenQuickso
 testData/fibonacci: testData/fibonacci.cpp
 	g++ -g -Wall -std=c++11 -O0 -fno-inline testData/fibonacci.cpp -o testData/fibonacci
 
+testData/quicksort: testData/quicksort.cpp
+	g++ -g -Wall -std=c++11 -O0 -fno-inline testData/quicksort.cpp -o testData/quicksort
+
 testData/fibonacciThread: testData/fibonacciThread.cpp
 	g++ -g -Wall -std=c++11 -stdlib=libc++ -O0 -fno-inline testData/fibonacciThread.cpp -o testData/fibonacciThread
 
@@ -20,8 +23,8 @@ testData/complexInlinedCases: testData/complexInlinedCases.cpp
 testData/singleInstructionInline: testData/singleInstructionInline.cpp
 	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline testData/singleInstructionInline.cpp -o testData/singleInstructionInline
 
-tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline
+tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline
 	python -m unittest discover
 
 clean:
-	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline
+	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline

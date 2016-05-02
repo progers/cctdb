@@ -25,7 +25,7 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertTrue(brokenQuicksortModuleFound)
 
     def testGetAllFunctions(self):
-        functionNames = lldbRecorder("examples/brokenQuicksort/brokenQuicksort").getAllFunctionNames()
+        functionNames = lldbRecorder("testData/quicksort").getAllFunctionNames()
         self.assertIn("main", functionNames)
         self.assertIn("swap(int*, int, int)", functionNames)
         self.assertIn("quicksort(int*, int, int)", functionNames)
@@ -33,17 +33,17 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertIn("printf", functionNames)
 
     def testGetFunctionNamesWithModuleName(self):
-        recorder = lldbRecorder("examples/brokenQuicksort/brokenQuicksort")
-        brokenQuicksortModuleName = recorder.getModuleNames()[0]
-        self.assertIn("brokenQuicksort", brokenQuicksortModuleName)
-        functionNames = recorder.getFunctionNamesWithModuleName(brokenQuicksortModuleName)
+        recorder = lldbRecorder("testData/quicksort")
+        quicksortModuleName = recorder.getModuleNames()[0]
+        self.assertIn("quicksort", quicksortModuleName)
+        functionNames = recorder.getFunctionNamesWithModuleName(quicksortModuleName)
         self.assertIn("main", functionNames)
         self.assertIn("swap(int*, int, int)", functionNames)
         self.assertIn("quicksort(int*, int, int)", functionNames)
 
     def testRecordMissingModule(self):
         with self.assertRaises(Exception) as cm:
-            recorder = lldbRecorder("examples/brokenQuicksort/brokenQuicksort")
+            recorder = lldbRecorder("testData/quicksort")
             cct = recorder.launchProcessThenRecord(["1"], "ModuleThatDoesNotExist")
         self.assertIn("Unable to find specified module in target.", cm.exception.message)
 
@@ -57,30 +57,30 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertIn("Function 'functionDoesNotExist' was not found.", cm.exception.message)
 
     def testBasicRecordingAtMain(self):
-        recorder = lldbRecorder("examples/brokenQuicksort/brokenQuicksort")
+        recorder = lldbRecorder("testData/quicksort")
         moduleName = recorder.getModuleNames()[0]
-        self.assertIn("brokenQuicksort", moduleName)
+        self.assertIn("quicksort", moduleName)
 
         cct = recorder.launchProcessThenRecord(["1"], moduleName)
         self.assertEquals(cct.asJson(), '[{"name": "main", "calls": [{"name": "sort(int*, int)", "calls": [{"name": "quicksort(int*, int, int)"}]}]}]')
 
     def testBasicRecordingAtSubroutine(self):
-        moduleName = lldbRecorder("examples/brokenQuicksort/brokenQuicksort").getModuleNames()[0]
-        self.assertIn("brokenQuicksort", moduleName)
+        moduleName = lldbRecorder("testData/quicksort").getModuleNames()[0]
+        self.assertIn("quicksort", moduleName)
 
-        sortCct = lldbRecorder("examples/brokenQuicksort/brokenQuicksort").launchProcessThenRecord(["1", "3", "2"], moduleName, "sort(int*, int)")
+        sortCct = lldbRecorder("testData/quicksort").launchProcessThenRecord(["1", "3", "2"], moduleName, "sort(int*, int)")
         self.assertEquals(sortCct.asJson(), '[{"name": "sort(int*, int)", "calls": [{"name": "quicksort(int*, int, int)", "calls": [{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}, {"name": "quicksort(int*, int, int)"}, {"name": "quicksort(int*, int, int)"}]}]}]')
 
-        partitionCct = lldbRecorder("examples/brokenQuicksort/brokenQuicksort").launchProcessThenRecord(["1", "3", "2"], moduleName, "partition(int*, int, int)")
+        partitionCct = lldbRecorder("testData/quicksort").launchProcessThenRecord(["1", "3", "2"], moduleName, "partition(int*, int, int)")
         self.assertEquals(partitionCct.asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}]')
 
-        swapCct = lldbRecorder("examples/brokenQuicksort/brokenQuicksort").launchProcessThenRecord(["1", "3", "2"], moduleName, "swap(int*, int, int)")
+        swapCct = lldbRecorder("testData/quicksort").launchProcessThenRecord(["1", "3", "2"], moduleName, "swap(int*, int, int)")
         self.assertEquals(swapCct.asJson(), '[{"name": "swap(int*, int, int)"}]')
 
     def testMultipleCallsToTargetFunction(self):
-        recorder = lldbRecorder("examples/brokenQuicksort/brokenQuicksort")
+        recorder = lldbRecorder("testData/quicksort")
         moduleName = recorder.getModuleNames()[0]
-        self.assertIn("brokenQuicksort", moduleName)
+        self.assertIn("quicksort", moduleName)
 
         cct = recorder.launchProcessThenRecord(["3", "1", "2", "3", "2"], moduleName, "partition(int*, int, int)")
         self.assertEquals(cct.asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}, {"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}, {"name": "partition(int*, int, int)"}]')
