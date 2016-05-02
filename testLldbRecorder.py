@@ -77,6 +77,25 @@ class TestLldbRecorder(unittest.TestCase):
         swapCct = lldbRecorder("examples/brokenQuicksort/brokenQuicksort").launchProcessThenRecord(["1", "3", "2"], brokenQuicksortModuleName, "swap(int*, int, int)")
         self.assertEquals(swapCct.asJson(), '[{"name": "swap(int*, int, int)"}]')
 
+    def testMultipleCallsToTargetFunction(self):
+        recorder = lldbRecorder("examples/brokenQuicksort/brokenQuicksort")
+        brokenQuicksortModuleName = recorder.getModuleNames()[0]
+        self.assertIn("brokenQuicksort", brokenQuicksortModuleName)
+
+        cct = recorder.launchProcessThenRecord(["3", "1", "2", "3", "2"], brokenQuicksortModuleName, "partition(int*, int, int)")
+        self.assertEquals(cct.asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}, {"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}, {"name": "partition(int*, int, int)"}]')
+
+    def testRecordProcess(self):
+        executable = "testData/fibonacci"
+        recorder = lldbRecorder(executable)
+        fibonacciModuleName = recorder.getModuleNames()[0]
+        self.assertIn("fibonacci", fibonacciModuleName)
+
+        proc = subprocess.Popen(executable + " 3", shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        cct = recorder.attachToProcessThenRecord(proc.pid, fibonacciModuleName, "computeFibonacci(unsigned long)")
+        self.assertEquals(cct.asJson(), '[{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}]')
+        self.assertIn("Fibonacci number 3 is 2", proc.stdout.read())
+
 if __name__ == "__main__":
     if platform.system() != "Darwin":
         warnings.warn("Platform '" + str(platform.system()) + "' may not support the full lldb API")
