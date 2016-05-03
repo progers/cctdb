@@ -23,8 +23,14 @@ testData/complexInlinedCases: testData/complexInlinedCases.cpp
 testData/singleInstructionInline: testData/singleInstructionInline.cpp
 	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline testData/singleInstructionInline.cpp -o testData/singleInstructionInline
 
-tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline
+testData/dynamicClassDarwin.so: testData/dynamicClassDarwin.h testData/dynamicClassDarwin.cpp
+	g++ -g -Wall -std=c++11 -O0 -fno-inline -dynamiclib -flat_namespace testData/dynamicClassDarwin.cpp -o testData/dynamicClassDarwin.so
+
+testData/dynamicLoaderDarwin: testData/dynamicClassDarwin.h testData/dynamicLoaderDarwin.cpp
+	g++ -g -Wall -std=c++11 -O0 -fno-inline testData/dynamicLoaderDarwin.cpp -o testData/dynamicLoaderDarwin
+
+tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin
 	python -m unittest discover
 
 clean:
-	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline
+	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin

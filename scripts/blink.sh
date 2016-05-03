@@ -7,7 +7,7 @@
 # blink.sh [content_shell_and_args] [command_to_run_with_renderer_pid]
 #
 # Example:
-# ./scripts/blink.sh "/Users/pdr/Desktop/chromium/src/out/Release/Content\ Shell.app/Contents/MacOS/Content\ Shell --renderer-startup-dialog --run-layout-test a.html" "./record.py -f 'blink::LayoutSVGShape::layout()' -m 'libwebcore_shared.dylib' /Users/pdr/Desktop/chromium/src/out/Release/Content\ Shell.app/Contents/MacOS/Content\ Shell --pid=RENDERERPID > test.json"
+# ./scripts/blink.sh "/Users/pdr/Desktop/chromium/src/out/Release/Content\ Shell.app/Contents/MacOS/Content\ Shell --renderer-startup-dialog --run-layout-test a.html" "./record.py -f 'blink::FrameView::layout()' -m '/Users/pdr/Desktop/chromium/src/out/Release/libwebcore_shared.dylib' /Users/pdr/Desktop/chromium/src/out/Release/Content\ Shell.app/Contents/MacOS/Content\ Shell --pid=RENDERERPID > test.json"
 
 echo "Starting blink renderer..."
 echo "running [$1]"

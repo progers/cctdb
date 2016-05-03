@@ -19,7 +19,7 @@ class lldbRecorder:
     def launchProcessThenRecord(self, args = [], moduleName = None, functionName = None):
         if not functionName:
             functionName = "main"
-        self._createBreakpoint(functionName)
+        self._createBreakpoint(functionName, moduleName)
         process = self._target.LaunchSimple(args, None, os.getcwd())
         if not process:
             raise Exception("Could not launch '" + self._executable + "' with args '" + ",".join(args) + "'")
@@ -29,7 +29,7 @@ class lldbRecorder:
         # TODO(phil): Launch in a stopped state instead of defaulting to "main".
         if not functionName:
             functionName = "main"
-        self._createBreakpoint(functionName)
+        self._createBreakpoint(functionName, moduleName)
 
         attachInfo = lldb.SBAttachInfo(int(pid))
         error = lldb.SBError()
@@ -44,7 +44,7 @@ class lldbRecorder:
         # TODO(phil): This will not find modules in subprocesses. Not sure that can be fixed.
         moduleNames = []
         for module in self._target.modules:
-            moduleNames.append(module.file.basename)
+            moduleNames.append(module.file.fullpath)
         return moduleNames
 
     def getFunctionNamesWithModuleName(self, moduleName):
@@ -64,15 +64,10 @@ class lldbRecorder:
             functionNames.extend(self.getFunctionNamesWithModuleName(moduleName))
         return functionNames
 
-    def _createBreakpoint(self, functionName):
-        self._target.BreakpointCreateByName(functionName)
-
+    def _createBreakpoint(self, functionName, moduleName = None):
+        self._target.BreakpointCreateByName(functionName, moduleName)
         if self._target.num_breakpoints <= 0:
             raise Exception("Failed to create function breakpoint.")
-        else:
-            for breakpoint in self._target.breakpoint_iter():
-                if breakpoint.GetNumLocations() <= 0:
-                    raise Exception("Function '" + functionName + "' was not found.")
 
     # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
     # a CCT subtree.
@@ -95,7 +90,7 @@ class lldbRecorder:
             frame = thread.GetFrameAtIndex(0)
 
             # Stay within our specified module.
-            if moduleName and not str(frame.module.file.basename) == moduleName:
+            if moduleName and not str(frame.module.file.fullpath) == moduleName:
                 thread.StepOutOfFrame(frame)
                 continue
 
@@ -142,13 +137,18 @@ class lldbRecorder:
         if not process:
             raise Exception("No running process found")
 
-        if moduleName:
-            foundModule = self._target.FindModule(lldb.SBFileSpec(moduleName))
-            if not foundModule.IsValid():
-                raise Exception("Unable to find specified module in target.")
-
+        # Ensure a breakpoint was created (see: _createBreakpoint)
+        # FIXME(phil): Turn this into a member variable instead of relying on lldb state.
         if self._target.num_breakpoints <= 0:
             raise Exception("Failed to create function breakpoint.")
+
+        if moduleName and not self._target.FindModule(lldb.SBFileSpec(moduleName)):
+            raise Exception("Unable to find specified module in target.")
+
+        # Ensure that a breakpoint is active in our module.
+        for breakpoint in self._target.breakpoint_iter():
+            if breakpoint.GetNumLocations() <= 0:
+                raise Exception("Could not break on function. Check the specified function name.")
 
         cct = CCT()
         while True:
@@ -162,8 +162,8 @@ class lldbRecorder:
                             raise Exception("Breakpoints are not supported on inlined functions.")
                         frameFunction = frame.GetFunction() if frame else None
                         if frameFunction:
-                            if moduleName and not str(frame.module.file.basename) == moduleName:
-                                raise Exception("Stopped on a breakpoint but specified module (" + moduleName + ") did not match breakpoint module (" + str(frame.module.file.basename) + ")")
+                            if moduleName and not str(frame.module.file.fullpath) == moduleName:
+                                raise Exception("Stopped on a breakpoint but specified module (" + moduleName + ") did not match breakpoint module (" + str(frame.module.file.fullpath) + ")")
 
                             suspendedThreads = self._suspendOtherThreads(thread, process)
 

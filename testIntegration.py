@@ -2,6 +2,7 @@
 
 from cct import CCT, Function
 import compare
+import os
 import subprocess
 import unittest
 
@@ -9,7 +10,7 @@ class TestIntegration(unittest.TestCase):
 
     def testBrokenQuicksortExample(self):
         executable = "examples/brokenQuicksort/brokenQuicksort"
-        module = "brokenQuicksort"
+        module = os.getcwd() + "/examples/brokenQuicksort/brokenQuicksort"
         function = "sort(int*, int)"
 
         # Ensure we can list our module.

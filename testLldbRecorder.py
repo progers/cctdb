@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from lldbRecorder import lldbRecorder
+import os
 import platform
 import subprocess
 import unittest
@@ -15,8 +16,7 @@ class TestLldbRecorder(unittest.TestCase):
 
     def testGetModuleNames(self):
         moduleNames = lldbRecorder("testData/quicksort").getModuleNames()
-        self.assertIn("dyld", moduleNames)
-        self.assertIn("libc++abi.dylib", moduleNames)
+        self.assertIn("/usr/lib/dyld", moduleNames)
         quicksortModuleFound = False
         for moduleName in moduleNames:
             if "quicksort" in moduleName:
@@ -32,6 +32,12 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertIn("fgets", functionNames)
         self.assertIn("printf", functionNames)
 
+    def testGetAllFunctionNamesInLoadedLibrary(self):
+        recorder = lldbRecorder("testData/dynamicLoaderDarwin")
+        functionNamesBeforeLoading = recorder.getAllFunctionNames()
+        self.assertIn("notDynamicC()", functionNamesBeforeLoading)
+        self.assertNotIn("dynamicCallAB()", functionNamesBeforeLoading)
+
     def testGetFunctionNamesWithModuleName(self):
         recorder = lldbRecorder("testData/quicksort")
         quicksortModuleName = recorder.getModuleNames()[0]
@@ -43,9 +49,15 @@ class TestLldbRecorder(unittest.TestCase):
 
     def testRecordMissingModule(self):
         with self.assertRaises(Exception) as cm:
-            recorder = lldbRecorder("testData/quicksort")
-            cct = recorder.launchProcessThenRecord(["1"], "ModuleThatDoesNotExist")
+            lldbRecorder("testData/quicksort").launchProcessThenRecord(["1"], "ModuleThatDoesNotExist")
         self.assertIn("Unable to find specified module in target.", cm.exception.message)
+
+    def testRecordMissingModuleInLoadedLibrary(self):
+        executable = "testData/dynamicLoaderDarwin"
+        proc = subprocess.Popen(executable, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        with self.assertRaises(Exception) as cm:
+            lldbRecorder(executable).attachToProcessThenRecord(proc.pid, "dynamicModuleDoesNotExist", "DynamicClassDarwin::dynamicCallAB()")
+        self.assertEquals("Unable to find specified module in target.", cm.exception.message)
 
     def testRecordMissingFunction(self):
         recorder = lldbRecorder("testData/fibonacci")
@@ -53,8 +65,18 @@ class TestLldbRecorder(unittest.TestCase):
         self.assertIn("fibonacci", moduleName)
 
         with self.assertRaises(Exception) as cm:
-            cct = recorder.launchProcessThenRecord(["3"], moduleName, "functionDoesNotExist")
-        self.assertIn("Function 'functionDoesNotExist' was not found.", cm.exception.message)
+            recorder.launchProcessThenRecord(["3"], moduleName, "functionDoesNotExist")
+        self.assertIn("Could not break on function. Check the specified function name.", cm.exception.message)
+
+    def testRecordMissingFunctionInLoadedLibrary(self):
+        executable = "testData/dynamicLoaderDarwin"
+        recorder = lldbRecorder(executable)
+        moduleName = recorder.getModuleNames()[0]
+        functionNotInModule = "DynamicClassDarwin::dynamicCallAB()"
+        proc = subprocess.Popen(executable, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        with self.assertRaises(Exception) as cm:
+            recorder.attachToProcessThenRecord(proc.pid, moduleName, functionNotInModule)
+        self.assertEquals("Could not break on function. Check the specified function name.", cm.exception.message)
 
     def testBasicRecordingAtMain(self):
         recorder = lldbRecorder("testData/quicksort")
@@ -95,6 +117,29 @@ class TestLldbRecorder(unittest.TestCase):
         cct = recorder.attachToProcessThenRecord(proc.pid, moduleName, "computeFibonacci(unsigned long)")
         self.assertEquals(cct.asJson(), '[{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}]')
         self.assertIn("Fibonacci number 3 is 2", proc.stdout.read())
+
+    def testRecordLoadedLibrary(self):
+        executable = "testData/dynamicLoaderDarwin"
+        dynamicModuleName = os.getcwd() + "/testData/dynamicClassDarwin.so"
+        recorder = lldbRecorder(executable)
+
+        moduleNamesBeforeLoading = recorder.getModuleNames()
+        self.assertIn("dynamicLoaderDarwin", moduleNamesBeforeLoading[0])
+        self.assertNotIn(dynamicModuleName, moduleNamesBeforeLoading)
+
+        proc = subprocess.Popen(executable, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        cct = recorder.attachToProcessThenRecord(proc.pid, dynamicModuleName, "DynamicClassDarwin::dynamicCallAB()")
+        self.assertEquals(cct.asJson(), '[{"name": "DynamicClassDarwin::dynamicCallAB()", "calls": [{"name": "DynamicClassDarwin::callA()"}, {"name": "DynamicClassDarwin::callB()"}]}]')
+
+    def testRecordStaysInSpecifiedLibrary(self):
+        executable = "testData/dynamicLoaderDarwin"
+        recorder = lldbRecorder(executable)
+        moduleName = recorder.getModuleNames()[0]
+        self.assertIn("dynamicLoaderDarwin", moduleName)
+
+        cct = lldbRecorder(executable).launchProcessThenRecord([], moduleName, "main")
+        # Ensure no DynamicClassDarwin calls are in the tree.
+        self.assertEquals(cct.asJson(), '[{"name": "main", "calls": [{"name": "notDynamicC()"}]}]')
 
     def testRecordingWithThreads(self):
         executable = "testData/fibonacciThread"

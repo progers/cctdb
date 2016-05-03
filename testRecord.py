@@ -2,6 +2,7 @@
 
 from cct import CCT, Function
 import compare
+import os
 import subprocess
 import unittest
 
@@ -9,7 +10,7 @@ import unittest
 class TestRecord(unittest.TestCase):
 
     def testRecordNewProcess(self):
-        command = "./record.py -m 'quicksort' -f 'sort(int*, int)' testData/quicksort 1"
+        command = "./record.py -m '" + os.getcwd() + "/testData/quicksort' -f 'sort(int*, int)' testData/quicksort 1"
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
         # FIXME(phil): See comment about spurious segfault in lldbRecorder.py
