@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
 # record.py - List a calling context tree.
+#
+# FIXME(phil): Switch to a kernel-level function tracing (dtrace, utrace/systemtap, etc.) over LLDB.
+# Kernel hooks are difficult to use for reliably recording all function calls in complex codebases
+# due to inlining, RVO, etc (see [1]). Relying on LLDB's complex source mapping logic is slow but
+# fairly reliable, and is cross-platform.
+# [1] https://github.com/progers/cctdb/blob/b08176b9f24c95a96ff6a22a6e63d176cc0916ae/dtrace.py
 
 import argparse
 from cct import CCT
