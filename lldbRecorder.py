@@ -191,7 +191,6 @@ class lldbRecorder:
 
     def __del__(self):
         if self._target and self._target.GetDebugger():
+            # Must manually clean up, see: https://llvm.org/bugs/show_bug.cgi?id=27639.
             self._target.GetDebugger().DeleteTarget(self._target)
-            # FIXME(phil): This line will prevent an lldb internal segfault but will cause tests to
-            # fail to attach. Filed: https://llvm.org/bugs/show_bug.cgi?id=27639
-            #self._target.GetDebugger().Terminate()
+            self._target.GetDebugger().Terminate()

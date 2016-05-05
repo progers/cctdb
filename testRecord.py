@@ -13,8 +13,7 @@ class TestRecord(unittest.TestCase):
         command = "./record.py -m '" + os.getcwd() + "/testData/quicksort' -f 'sort(int*, int)' testData/quicksort 1"
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        # FIXME(phil): See comment about spurious segfault in lldbRecorder.py
-        #self.assertEqual(0, proc.returncode)
+        self.assertEqual(0, proc.returncode)
         self.assertEqual("", err)
         self.assertEqual('[\n  {\n    "name": "sort(int*, int)", \n    "calls": [\n      {\n        "name": "quicksort(int*, int, int)"\n      }\n    ]\n  }\n]\n', out)
 

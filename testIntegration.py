@@ -17,8 +17,7 @@ class TestIntegration(unittest.TestCase):
         command = "./listModules.py " + executable
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        # FIXME(phil): See comment about spurious segfault in lldbRecorder.py
-        #self.assertEqual(0, proc.returncode)
+        self.assertEqual(0, proc.returncode)
         self.assertEqual("", err)
         self.assertNotEqual("", out)
         modules = out.split("\n")
@@ -28,8 +27,7 @@ class TestIntegration(unittest.TestCase):
         command = "./listFunctions.py -m '" + module + "' " + executable
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        # FIXME(phil): See comment about spurious segfault in lldbRecorder.py
-        #self.assertEqual(0, proc.returncode)
+        self.assertEqual(0, proc.returncode)
         self.assertEqual("", err)
         self.assertNotEqual("", out)
         functions = out.split("\n")
@@ -39,8 +37,7 @@ class TestIntegration(unittest.TestCase):
         command = "./record.py -m '" + module + "' -f '" + function + "' " + executable + " 1 6 3 9 0"
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        # FIXME(phil): See comment about spurious segfault in lldbRecorder.py
-        #self.assertEqual(0, proc.returncode)
+        self.assertEqual(0, proc.returncode)
         self.assertEqual("", err)
         self.assertNotEqual("", out)
         self.assertTrue(len(out) > 1)
@@ -52,8 +49,7 @@ class TestIntegration(unittest.TestCase):
         command = "./record.py -m '" + module + "' -f '" + function + "' " + executable + " 1 6 5 9 0"
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        # FIXME(phil): See comment about spurious segfault in lldbRecorder.py
-        #self.assertEqual(0, proc.returncode)
+        self.assertEqual(0, proc.returncode)
         self.assertEqual("", err)
         self.assertNotEqual("", out)
         self.assertTrue(len(out) > 1)

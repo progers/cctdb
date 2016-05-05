@@ -18,8 +18,7 @@ class TestListFunctions(unittest.TestCase):
         command = "./listFunctions.py testData/quicksort"
         proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        # FIXME(phil): See comment about spurious segfault in lldbRecorder.py
-        #self.assertEqual(0, proc.returncode)
+        self.assertEqual(0, proc.returncode)
         self.assertEqual("", err)
         self.assertNotEqual("", out)
         functions = out.split("\n")
