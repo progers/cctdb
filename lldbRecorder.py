@@ -1,6 +1,12 @@
 # Class for recording calling context trees (CCT) using lldb.
 
-import lldb
+# LLDB is not on the python path by default. Try to give a helpful error message if it isn't found.
+try:
+    import lldb
+except ImportError:
+    print "LLDB not found in PYTHONPATH. Run the following command to add it:"
+    print "  export PYTHONPATH=/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Resources/Python"
+    raise Exception("Couldn't locate the 'lldb' module, please set PYTHONPATH correctly")
 from cct import CCT, Function
 import os
 import platform
