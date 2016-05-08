@@ -18,8 +18,7 @@ class lldbRecorder:
         self._target = lldb.SBDebugger.Create().CreateTarget(self._executable)
         if not self._target:
             raise Exception("Could not create target '" + self._executable + "'")
-        # TODO(phil): Is this needed?
-        self._target.GetDebugger().SetAsync(False)
+        self._target.GetDebugger().SetAsync(True)
         self._recording = False
 
     def launchProcessThenRecord(self, args = [], moduleName = None, functionName = None):
@@ -75,72 +74,8 @@ class lldbRecorder:
         if self._target.num_breakpoints <= 0:
             raise Exception("Failed to create function breakpoint.")
 
-    # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
-    # a CCT subtree.
-    # TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
-    # callbacks, we'll step over the creation of new threads without stepping into them. There's some
-    # discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
-    def _recordSubtreeCallsFromThread(self, cct, thread, moduleName, initialFrameDepth = None):
-        if not thread:
-            return
-
-        if not initialFrameDepth:
-            initialFrameDepth = thread.GetNumFrames()
-
-        while True:
-            stopReason = thread.GetStopReason()
-            if not (stopReason == lldb.eStopReasonPlanComplete or stopReason == lldb.eStopReasonBreakpoint):
-                return
-
-            thread.StepInto()
-            frame = thread.GetFrameAtIndex(0)
-
-            # Stay within our specified module.
-            if moduleName and not str(frame.module.file.fullpath) == moduleName:
-                thread.StepOutOfFrame(frame)
-                continue
-
-            # Ignore inlined functions because the frame depth becomes unreliable.
-            if frame.is_inlined:
-                continue
-
-            frameDepth = thread.GetNumFrames()
-            if frameDepth > initialFrameDepth:
-                function = frame.GetFunction()
-                if not function:
-                    continue
-                functionCall = Function(function.GetName())
-                cct.addCall(functionCall)
-                self._recordSubtreeCallsFromThread(functionCall, thread, moduleName, frameDepth)
-            elif frameDepth < initialFrameDepth:
-                return
-
-    # Suspend all running threads except nonStopThread. Returns the threads that were suspended.
-    def _suspendOtherThreads(self, nonStopThread, process):
-        nonStopThreadId = nonStopThread.GetThreadID()
-        suspendedThreads = []
-        for thread in process.threads:
-            if thread.is_suspended:
-                continue
-            threadId = thread.GetThreadID()
-            if threadId == nonStopThreadId:
-                continue
-            thread.Suspend()
-            suspendedThreads.append(thread)
-        return suspendedThreads
-
-    def _resumeThreads(self, threads):
-        for thread in threads:
-            thread.Resume()
-
-    # Record a calling context tree from the current process.
-    # For each non-nested breakpoint, a top-level call is created in the CCT.
-    def _recordFromBreakpoint(self, moduleName = None):
-        if self._recording:
-            raise Exception("Cannot record process that is already being recorded.")
-        self._recording = True
-        process = self._target.GetProcess()
-        if not process:
+    def _ensureBreakpointExists(self, moduleName = None):
+        if not self._target.GetProcess():
             raise Exception("No running process found")
 
         # Ensure a breakpoint was created (see: _createBreakpoint)
@@ -156,37 +91,125 @@ class lldbRecorder:
             if breakpoint.GetNumLocations() <= 0:
                 raise Exception("Could not break on function. Check the specified function name.")
 
+    # Record a calling context tree from the current process.
+    # For each non-nested breakpoint, a top-level call is created in the CCT.
+    # TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
+    # callbacks, we'll step over the creation of new threads without stepping into them. There's some
+    # discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
+    def _recordFromBreakpoint(self, moduleName = None):
+        self._ensureBreakpointExists(moduleName)
+        if self._recording:
+            raise Exception("Cannot record process that is already being recorded.")
+        self._recording = True
+
+        process = self._target.GetProcess()
+        listener = self._target.GetDebugger().GetListener()
+
         cct = CCT()
+
+        # The current call leaf being processed.
+        subtree = cct
+        # The frame counts for each node in the subtree.
+        subtreeFrameDepth = [ -1 ]
+
+        # Continue if initially stopped.
+        # FIXME(phil): Should we do this inside the main loop on the first stop?
+        if process.GetState() == lldb.eStateStopped:
+            process.Continue()
+
+        # This is the main event loop where we wait for lldb to hit a breakpoint, and then step
+        # through and record every function call below the breakpoint.
+        # FIXME(phil): Factor out the tree management (adding fn calls, etc) from the event loop.
         while True:
-            state = process.GetState()
-            if state == lldb.eStateStopped:
-                for thread in process.threads:
+            event = lldb.SBEvent()
+            if not listener.WaitForEvent(1, event):
+                # If no event occurs after 1s, control is returned to this thread. We handle any
+                # events (signals, etc) and immediately return back to wait for events.
+                continue
+            if lldb.SBProcess.EventIsProcessEvent(event):
+                state = lldb.SBProcess.GetStateFromEvent(event)
+                if state == lldb.eStateStopped:
+                    thread = process.GetSelectedThread()
                     stopReason = thread.GetStopReason()
                     if stopReason == lldb.eStopReasonBreakpoint:
                         frame = thread.GetFrameAtIndex(0)
                         if frame.is_inlined:
-                            raise Exception("Breakpoints are not supported on inlined functions.")
-                        frameFunction = frame.GetFunction() if frame else None
-                        if frameFunction:
-                            if moduleName and not str(frame.module.file.fullpath) == moduleName:
-                                raise Exception("Stopped on a breakpoint but specified module (" + moduleName + ") did not match breakpoint module (" + str(frame.module.file.fullpath) + ")")
+                            raise Exception("Breakpoints are not supported on inlined functions")
+                        if subtree != cct:
+                            raise Exception("Nested breakpoints should have been handled by stepping")
 
-                            suspendedThreads = self._suspendOtherThreads(thread, process)
+                        newFunctionCall = Function(frame.GetFunction().GetName())
+                        subtree.addCall(newFunctionCall)
+                        subtreeFrameDepth.append(thread.GetNumFrames())
+                        subtree = newFunctionCall
 
-                            currentFunction = Function(frameFunction.GetName())
-                            cct.addCall(currentFunction)
-                            self._recordSubtreeCallsFromThread(currentFunction, thread, moduleName)
+                        thread.StepInto()
+                    elif stopReason == lldb.eStopReasonPlanComplete:
+                        # Update current tree position given the current frame depth.
+                        frameDepth = thread.GetNumFrames()
+                        steppedOutOfBreakpoint = False
+                        while frameDepth < subtreeFrameDepth[-1]:
+                            subtree = subtree.parent
+                            subtreeFrameDepth.pop()
+                            if subtree == cct:
+                                steppedOutOfBreakpoint = True
+                                break
+                        if steppedOutOfBreakpoint:
+                            process.Continue()
+                            continue
 
-                            self._resumeThreads(suspendedThreads)
+                        # If the frame depth is unchanged, do not record a new function call as
+                        # we are still in the previous one. This will occur for all but the first
+                        # line of a function.
+                        if frameDepth == subtreeFrameDepth[-1]:
+                            # FIXME(phil): Harden this check by verifying the function name.
+                            thread.StepInto()
+                            continue
 
-                process.Continue()
-            elif state == lldb.eStateExited:
-                break
+                        # Stay within our specified module.
+                        frame = thread.GetFrameAtIndex(0)
+                        if moduleName and not str(frame.module.file.fullpath) == moduleName:
+                            thread.StepOutOfFrame(frame)
+                            continue
+
+                        # Ignore inlined functions because the frame depth becomes unreliable.
+                        if frame.is_inlined:
+                            thread.StepInto()
+                            continue
+
+                        # We are only interested in function calls.
+                        frameFunction = frame.GetFunction()
+                        if not frameFunction:
+                            thread.StepInto()
+                            continue
+
+                        newFunctionCall = Function(frameFunction.GetName())
+                        subtree.addCall(newFunctionCall)
+                        subtreeFrameDepth.append(frameDepth)
+                        subtree = newFunctionCall
+
+                        thread.StepInto()
+                    elif stopReason == lldb.eStopReasonNone:
+                        continue
+                    elif stopReason == lldb.eStopReasonInvalid:
+                        continue
+                    elif stopReason == lldb.eStopReasonSignal:
+                        # FIXME(phil): Check the actual signal and only continue for SIGSTOP.
+                        process.Continue()
+                    else:
+                        raise Exception("Unhandled stepping stop reason: " + str(stopReason))
+                elif state == lldb.eStateStepping:
+                    raise Exception("Unhandled stepping process state.")
+                elif state == lldb.eStateExited:
+                    break
+                elif state == lldb.eStateInvalid:
+                    raise Exception("Invalid process state")
+                elif state == lldb.eStateRunning:
+                    continue
+                else:
+                    raise Exception("Unhandled process state: " + str(state))
             else:
-                stateString = self._target.GetDebugger().StateAsCString(state)
-                process.Kill()
-                raise Exception("Unexpected process state '" + stateString + "'")
-                break
+                raise Exception("Unhandled event: " + str(event))
         return cct
 
     def __del__(self):

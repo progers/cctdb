@@ -178,6 +178,7 @@ class TestLldbRecorder(unittest.TestCase):
         # Ensure no DynamicClassDarwin calls are in the tree.
         self.assertEquals(cct.asJson(), '[{"name": "main", "calls": [{"name": "notDynamicC()"}]}]')
 
+    @unittest.skip("FIXME(phil): support thread stepping in with new event-based recording.")
     def testRecordingWithThreads(self):
         executable = "testData/fibonacciThread"
         moduleName = self.createTestRecorder(executable).getModuleNames()[0]

@@ -12,6 +12,12 @@ import argparse
 from cct import CCT
 import json
 from lldbRecorder import lldbRecorder
+import signal
+import sys
+
+def signalHandler(signal, frame):
+    # FIXME(phil): dump the current cct and cleanup instead of just exiting.
+    sys.exit(0)
 
 def main():
     parser = argparse.ArgumentParser(description='Record a calling context tree.')
@@ -20,6 +26,8 @@ def main():
     parser.add_argument('-m', '--module', help='Filter by module')
     parser.add_argument('-f', '--function', help='Filter for calls made in a specific function')
     args, leftoverArgs = parser.parse_known_args()
+
+    signal.signal(signal.SIGINT, signalHandler)
 
     result = None
     if (args.pid):
