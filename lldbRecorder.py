@@ -19,18 +19,23 @@ class lldbRecorder:
         if not self._target:
             raise Exception("Could not create target '" + self._executable + "'")
         self._target.GetDebugger().SetAsync(True)
-        self._recording = False
+        self._cct = None
+
+    def cct(self):
+        return self._cct
 
     def launchProcessThenRecord(self, args = [], moduleName = None, functionName = None):
+        self._cct = None
         if not functionName:
             functionName = "main"
         self._createBreakpoint(functionName, moduleName)
         process = self._target.LaunchSimple(args, None, os.getcwd())
         if not process:
             raise Exception("Could not launch '" + self._executable + "' with args '" + ",".join(args) + "'")
-        return self._recordFromBreakpoint(moduleName)
+        return self._recordFromBreakpoints(moduleName)
 
     def attachToProcessThenRecord(self, pid, moduleName = None, functionName = None):
+        self._cct = None
         # TODO(phil): Launch in a stopped state instead of defaulting to "main".
         if not functionName:
             functionName = "main"
@@ -43,7 +48,7 @@ class lldbRecorder:
             raise Exception("Error attaching to process: " + error.description)
         if not process:
             raise Exception("Unable to attach to process")
-        return self._recordFromBreakpoint(moduleName)
+        return self._recordFromBreakpoints(moduleName)
 
     def getModuleNames(self):
         # TODO(phil): This will not find modules in subprocesses. Not sure that can be fixed.
@@ -96,19 +101,17 @@ class lldbRecorder:
     # TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
     # callbacks, we'll step over the creation of new threads without stepping into them. There's some
     # discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
-    def _recordFromBreakpoint(self, moduleName = None):
+    def _recordFromBreakpoints(self, moduleName = None):
         self._ensureBreakpointExists(moduleName)
-        if self._recording:
-            raise Exception("Cannot record process that is already being recorded.")
-        self._recording = True
+        if self._cct:
+            raise Exception("Can only record one tree at a time.")
+        self._cct = CCT()
 
         process = self._target.GetProcess()
         listener = self._target.GetDebugger().GetListener()
 
-        cct = CCT()
-
         # The current call leaf being processed.
-        subtree = cct
+        subtree = self._cct
         # The frame counts for each node in the subtree.
         subtreeFrameDepth = [ -1 ]
 
@@ -135,7 +138,7 @@ class lldbRecorder:
                         frame = thread.GetFrameAtIndex(0)
                         if frame.is_inlined:
                             raise Exception("Breakpoints are not supported on inlined functions")
-                        if subtree != cct:
+                        if subtree != self._cct:
                             raise Exception("Nested breakpoints should have been handled by stepping")
 
                         newFunctionCall = Function(frame.GetFunction().GetName())
@@ -151,7 +154,7 @@ class lldbRecorder:
                         while frameDepth < subtreeFrameDepth[-1]:
                             subtree = subtree.parent
                             subtreeFrameDepth.pop()
-                            if subtree == cct:
+                            if subtree == self._cct:
                                 steppedOutOfBreakpoint = True
                                 break
                         if steppedOutOfBreakpoint:
@@ -210,7 +213,7 @@ class lldbRecorder:
                     raise Exception("Unhandled process state: " + str(state))
             else:
                 raise Exception("Unhandled event: " + str(event))
-        return cct
+        return self._cct
 
     def __del__(self):
         if self._target and self._target.GetDebugger():
