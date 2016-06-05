@@ -11,6 +11,9 @@ testData/fibonacci: testData/fibonacci.cpp
 testData/quicksort: testData/quicksort.cpp
 	g++ -g -Wall -std=c++11 -O0 -fno-inline testData/quicksort.cpp -o testData/quicksort
 
+testData/optimizedQuicksort: testData/quicksort.cpp
+	g++ -g -Wall -std=c++11 -O1 -fno-inline testData/quicksort.cpp -o testData/optimizedQuicksort
+
 testData/fibonacciThread: testData/fibonacciThread.cpp
 	g++ -g -Wall -std=c++11 -stdlib=libc++ -O0 -fno-inline testData/fibonacciThread.cpp -o testData/fibonacciThread
 
@@ -29,8 +32,8 @@ testData/dynamicClassDarwin.so: testData/dynamicClassDarwin.h testData/dynamicCl
 testData/dynamicLoaderDarwin: testData/dynamicClassDarwin.h testData/dynamicLoaderDarwin.cpp
 	g++ -g -Wall -std=c++11 -O0 -fno-inline testData/dynamicLoaderDarwin.cpp -o testData/dynamicLoaderDarwin
 
-tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin
+tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/optimizedQuicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin
 	python -m unittest discover
 
 clean:
-	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin
+	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/optimizedQuicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin

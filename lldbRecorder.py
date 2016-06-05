@@ -11,6 +11,7 @@ from cct import CCT, Function
 import os
 import platform
 import sys
+import warnings
 
 class lldbRecorder:
     def __init__(self, executable):
@@ -20,6 +21,7 @@ class lldbRecorder:
             raise Exception("Could not create target '" + self._executable + "'")
         self._target.GetDebugger().SetAsync(True)
         self._cct = None
+        self._skipOptimizationWarning = False
 
     def cct(self):
         return self._cct
@@ -73,6 +75,17 @@ class lldbRecorder:
         for moduleName in self.getModuleNames():
             functionNames.extend(self.getFunctionNamesWithModuleName(moduleName))
         return functionNames
+
+    # LLDB has stepping bugs if optimizations are enabled so give the user a heads up.
+    # See: https://llvm.org/bugs/show_bug.cgi?id=27800
+    def _checkForOptimizations(self, function):
+        if self._skipOptimizationWarning:
+            return
+        if function and function.GetIsOptimized():
+            message = ("Function '" + str(function.GetName()) + "' was compiled with optimizations "
+                       "which can cause stepping issues. Consider re-compiling with -O0.")
+            warnings.warn(message, RuntimeWarning)
+            self._skipOptimizationWarning = True
 
     def _createBreakpoint(self, functionName, moduleName = None):
         self._target.BreakpointCreateByName(functionName, moduleName)
@@ -141,7 +154,9 @@ class lldbRecorder:
                         if subtree != self._cct:
                             raise Exception("Nested breakpoints should have been handled by stepping")
 
-                        newFunctionCall = Function(frame.GetFunction().GetName())
+                        frameFunction = frame.GetFunction()
+                        self._checkForOptimizations(frameFunction)
+                        newFunctionCall = Function(frameFunction.GetName())
                         subtree.addCall(newFunctionCall)
                         subtreeFrameDepth.append(thread.GetNumFrames())
                         subtree = newFunctionCall
@@ -186,6 +201,7 @@ class lldbRecorder:
                             thread.StepInto()
                             continue
 
+                        self._checkForOptimizations(frameFunction)
                         newFunctionCall = Function(frameFunction.GetName())
                         subtree.addCall(newFunctionCall)
                         subtreeFrameDepth.append(frameDepth)

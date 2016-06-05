@@ -257,6 +257,15 @@ class TestLldbRecorder(unittest.TestCase):
         cct = recorder.launchProcessThenRecord([], moduleName, "A()")
         self.assertEquals(cct.asJson(), '[{"name": "A()", "calls": [{"name": "C()", "calls": [{"name": "D()"}]}]}]')
 
+    def testOptimizationWarning(self):
+        recorder = self.createTestRecorder("testData/optimizedQuicksort")
+        moduleName = recorder.getModuleNames()[0]
+        self.assertIn("optimizedQuicksort", moduleName)
+
+        with warnings.catch_warnings(record=True) as w:
+            cct = recorder.launchProcessThenRecord(["1"], moduleName)
+            self.assertIn("was compiled with optimizations which can cause stepping issues", str(w[0].message))
+
 if __name__ == "__main__":
     if platform.system() != "Darwin":
         warnings.warn("Platform '" + str(platform.system()) + "' may not support the full lldb API")
