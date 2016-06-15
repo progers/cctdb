@@ -17,7 +17,7 @@ import shlex
 def createParser():
     usage = "usage: %prog [options]"
     parser = optparse.OptionParser(description="Record a calling context tree", prog='record', usage=usage)
-    # TODO: Add option to write to a file.
+    parser.add_option('-o', '--output', action='store', dest='output', help='write recording to an output file')
     # TODO: Add option to stay within a module.
     # TODO: Improve the built-in description to provide a simple example.
     return parser
@@ -53,7 +53,11 @@ def recordCallingContextTree(debugger, command, result, dict):
     except Exception as exception:
         result.SetError(str(exception))
     if isinstance(cct, CCT):
-        print cct.asJson(2)
+        if options.output:
+            with open(options.output, 'w') as outputFile:
+                outputFile.write(cct.asJson(0))
+        else:
+            print cct.asJson(2)
 
 def __lldb_init_module(debugger, dict):
     # This initializer is being run from LLDB in the embedded command interpreter
