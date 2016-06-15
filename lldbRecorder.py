@@ -147,22 +147,7 @@ class lldbRecorder:
                 if state == lldb.eStateStopped:
                     thread = process.GetSelectedThread()
                     stopReason = thread.GetStopReason()
-                    if stopReason == lldb.eStopReasonBreakpoint:
-                        frame = thread.GetFrameAtIndex(0)
-                        if frame.is_inlined:
-                            raise Exception("Breakpoints are not supported on inlined functions")
-                        if subtree != self._cct:
-                            raise Exception("Nested breakpoints should have been handled by stepping")
-
-                        frameFunction = frame.GetFunction()
-                        self._checkForOptimizations(frameFunction)
-                        newFunctionCall = Function(frameFunction.GetName())
-                        subtree.addCall(newFunctionCall)
-                        subtreeFrameDepth.append(thread.GetNumFrames())
-                        subtree = newFunctionCall
-
-                        thread.StepInto()
-                    elif stopReason == lldb.eStopReasonPlanComplete:
+                    if stopReason == lldb.eStopReasonBreakpoint or stopReason == lldb.eStopReasonPlanComplete:
                         # Update current tree position given the current frame depth.
                         frameDepth = thread.GetNumFrames()
                         steppedOutOfBreakpoint = False
