@@ -169,7 +169,6 @@ class TestRecord(unittest.TestCase):
         cct = TestRecorder("testData/singleInstructionInline", [], "A()").record()
         self.assertEquals(cct.asJson(), '[{"name": "A()", "calls": [{"name": "C()", "calls": [{"name": "D()"}]}]}]')
 
-
     def testOptimizationWarning(self):
         with warnings.catch_warnings(record=True) as w:
             cct = TestRecorder("testData/optimizedQuicksort", ["1"], "main").record()

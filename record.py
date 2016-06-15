@@ -4,9 +4,6 @@ from cct import CCT, Function
 import lldb
 import warnings
 
-# Global variable to prevent showing the optimization warning multiple times.
-skipOptimizationWarning = False
-
 # Record a calling context tree rooted at the current frame.
 # TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
 # callbacks, we'll step over the creation of new threads without stepping into them. There's some
@@ -60,16 +57,23 @@ def recordSubtreeCalls(cct, thread, stayWithinModule, initialFrameDepth = None):
             function = frame.GetFunction()
             if not function:
                 continue
-            # LLDB has stepping bugs if optimizations are enabled so give the user a heads up.
-            # See: https://llvm.org/bugs/show_bug.cgi?id=27800
+            _showOptimizationWarning(function)
+            functionCall = Function(function.GetName())
+            cct.addCall(functionCall)
+            recordSubtreeCalls(functionCall, thread, stayWithinModule, frameDepth)
+        elif frameDepth < initialFrameDepth:
+                return
+
+# LLDB has stepping bugs if optimizations are enabled so give the user a heads up.
+# See: https://llvm.org/bugs/show_bug.cgi?id=27800
+#
+# TODO: Investigate if we can dynamically change LLDB settings (e.g., use-fast-stepping,
+# inline-breakpoint-strategy) to avoid these bugs.
+skipOptimizationWarning = False
+def _showOptimizationWarning(function):
             global skipOptimizationWarning
             if not skipOptimizationWarning and function.GetIsOptimized():
                 message = ("Function '" + str(function.GetName()) + "' was compiled with optimizations "
                            "which can cause stepping issues. Consider re-compiling with -O0.")
                 warnings.warn(message, RuntimeWarning)
                 skipOptimizationWarning = True
-            functionCall = Function(function.GetName())
-            cct.addCall(functionCall)
-            recordSubtreeCalls(functionCall, thread, stayWithinModule, frameDepth)
-        elif frameDepth < initialFrameDepth:
-                return
