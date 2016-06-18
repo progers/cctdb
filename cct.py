@@ -28,7 +28,7 @@ class Function(object):
 
     def callStack(self):
         stack = []
-        if (self.parent):
+        if self.parent:
             stack.extend(self.parent.callStack())
         stack.append(self)
         return stack

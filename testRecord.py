@@ -55,8 +55,11 @@ class TestRecorder:
     def record(self, shouldStayWithinModule = True):
         return record(self._target, shouldStayWithinModule)
 
-    def continueProcess(self):
+    def continueToNextBreakpoint(self):
         self._target.GetProcess().Continue()
+        thread = self._target.GetProcess().GetSelectedThread()
+        if thread.GetStopReason() != lldb.eStopReasonBreakpoint:
+            raise Exception("Could not continue to next breakpoint")
 
     def __del__(self):
         if self._target and self._target.GetDebugger():
@@ -103,9 +106,9 @@ class TestRecord(unittest.TestCase):
     def testMultipleBreakpoints(self):
         recorder = TestRecorder("testData/quicksort", ["3", "1", "2", "3", "2"], "partition(int*, int, int)")
         self.assertEquals(recorder.record().asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}]')
-        recorder.continueProcess()
+        recorder.continueToNextBreakpoint()
         self.assertEquals(recorder.record().asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}]')
-        recorder.continueProcess()
+        recorder.continueToNextBreakpoint()
         self.assertEquals(recorder.record().asJson(), '[{"name": "partition(int*, int, int)"}]')
 
     def testRecordStaysInSpecifiedLibrary(self):
@@ -124,10 +127,10 @@ class TestRecord(unittest.TestCase):
         self.assertEquals(firstCall.asJson(), '[{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}]')
         
         # Each call to computeFibonacci should have the same subtree.
-        recorder.continueProcess()
+        recorder.continueToNextBreakpoint()
         secondCall = recorder.record()
         self.assertEquals(firstCall.asJson(), secondCall.asJson())
-        recorder.continueProcess()
+        recorder.continueToNextBreakpoint()
         thirdCall = recorder.record()
         self.assertEquals(firstCall.asJson(), thirdCall.asJson())
 
@@ -143,7 +146,7 @@ class TestRecord(unittest.TestCase):
         firstBranch = recorder.record()
         self.assertEquals(firstBranch.asJson(), '[{"name": "A(int&)", "calls": [{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]}]')
 
-        recorder.continueProcess()
+        recorder.continueToNextBreakpoint()
         secondBranch = recorder.record()
         self.assertEquals(secondBranch.asJson(), '[{"name": "A(int&)"}]')
 
@@ -157,11 +160,11 @@ class TestRecord(unittest.TestCase):
         branch0 = recorder.record()
         self.assertEquals(branch0.asJson(), '[{"name": "A(int&)", "calls": [{"name": "C(int&)"}]}]')
 
-        recorder.continueProcess()
+        recorder.continueToNextBreakpoint()
         branch1 = recorder.record()
         self.assertEquals(branch1.asJson(), '[{"name": "A(int&)"}]')
 
-        recorder.continueProcess()
+        recorder.continueToNextBreakpoint()
         branch3 = recorder.record()
         self.assertEquals(branch3.asJson(), '[{"name": "A(int&)"}]')
 
