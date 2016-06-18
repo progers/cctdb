@@ -16,8 +16,8 @@ import shlex
 
 def createParser():
     usage = "usage: %prog [options]"
-    parser = optparse.OptionParser(description="Record a calling context tree", prog='record', usage=usage)
-    parser.add_option('-o', '--output', action='store', dest='output', help='write recording to an output file')
+    parser = optparse.OptionParser(description="Record a calling context tree", prog="record", usage=usage)
+    parser.add_option("-o", "--output", action="store", dest="output", help="write recording to an output file")
     # TODO: Add option to stay within a module.
     # TODO: Improve the built-in description to provide a simple example.
     return parser
@@ -63,5 +63,5 @@ def __lldb_init_module(debugger, dict):
     # This initializer is being run from LLDB in the embedded command interpreter
     parser = createParser()
     record.__doc__ = parser.format_help()
-    debugger.HandleCommand('command script add -f command.recordCallingContextTree record')
-    print 'The "record" command has been installed, type "help record" for more information.'
+    debugger.HandleCommand("command script add -f command.recordCallingContextTree record")
+    print "The \"record\" command has been installed, type \"help record\" for more information."

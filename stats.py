@@ -34,7 +34,7 @@ def main():
 
     print "Top called functions:"
     for count, functionName in _topCalledFunctionCallNames(cct, 100):
-        print '{:12}'.format(count) + "  " + functionName
+        print "{:12}".format(count) + "  " + functionName
 
 if __name__ == "__main__":
     main()
