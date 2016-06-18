@@ -19,7 +19,7 @@ class TestIntegration(unittest.TestCase):
 
             # Record good and bad runs.
             lldbSteps = [
-                "command script import command.py",
+                "command script import recordCommand.py",
                 "breakpoint set --name sort",
                 "run " + goodInput,
                 "record --output=" + goodCctFile,

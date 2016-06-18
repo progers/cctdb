@@ -3,7 +3,7 @@
 # lldb command hooks for recording a calling context tree (CCT)
 #
 # To use, start lldb and run:
-#     command script import command.py
+#     command script import recordCommand.py
 #
 # Use "help record" for additional instructions for using the record command.
 
@@ -56,6 +56,7 @@ def recordCallingContextTree(debugger, command, result, dict):
         if options.output:
             with open(options.output, 'w') as outputFile:
                 outputFile.write(cct.asJson(0))
+                print "Wrote recording to '" + options.output + "'"
         else:
             print cct.asJson(2)
 
@@ -63,5 +64,5 @@ def __lldb_init_module(debugger, dict):
     # This initializer is being run from LLDB in the embedded command interpreter
     parser = createParser()
     record.__doc__ = parser.format_help()
-    debugger.HandleCommand("command script add -f command.recordCallingContextTree record")
+    debugger.HandleCommand("command script add -f recordCommand.recordCallingContextTree record")
     print "The \"record\" command has been installed, type \"help record\" for more information."

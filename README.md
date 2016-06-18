@@ -19,7 +19,7 @@ The first step is to start debugging your program with LLDB by setting a breakpo
 
 Now record every function call made from the function `int main()` by loading and running the `record` script:
 ```
-(lldb) command script import path/to/command.py
+(lldb) command script import path/to/recordCommand.py
 The "record" command has been installed, type "help record" for more information.
 (lldb) record --output good.json
 ```
