@@ -8,3 +8,7 @@ __pycache__/
 
 # Debug files
 *.dSYM/
+
+# Binaries
+examples/brokenQuicksort/out/*
+test/data/out/*

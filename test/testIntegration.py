@@ -11,7 +11,7 @@ class TestIntegration(unittest.TestCase):
             # Use a temporary scratch directory.
             tempOutputDir = tempfile.mkdtemp()
 
-            executable = "examples/brokenQuicksort/brokenQuicksort"
+            executable = "examples/brokenQuicksort/out/brokenQuicksort"
             goodInput = "1 6 3 9 0"
             goodCctFile = os.path.join(tempOutputDir, "good.json")
             badInput = "1 6 5 9 0"
