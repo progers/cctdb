@@ -9,18 +9,15 @@ import warnings
 # callbacks, we'll step over the creation of new threads without stepping into them. There's some
 # discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
 def record(target, shouldStayWithinModule = True):
-    cct = CCT()
     thread = target.GetProcess().GetSelectedThread()
     frame = thread.GetSelectedFrame()
     function = frame.GetFunction()
-    if function:
-        stayWithinModule = frame.GetModule() if shouldStayWithinModule else None
-        # TODO(phil): refactor function creation into recordSubtreeCalls instead of duplicating it.
-        functionCall = Function(function.GetName())
-        cct.addCall(functionCall)
-        recordSubtreeCalls(functionCall, thread, stayWithinModule)
-    else:
+    if not function:
         raise Exception("Debugger not stopped on a function.")
+
+    cct = CCT()
+    stayWithinModule = frame.GetModule() if shouldStayWithinModule else None
+    recordFunctionAndSubtree(cct, thread, function, thread.GetNumFrames(), stayWithinModule)
     return cct
 
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
@@ -28,41 +25,35 @@ def record(target, shouldStayWithinModule = True):
 # TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
 # callbacks, we'll step over the creation of new threads without stepping into them. There's some
 # discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
-def recordSubtreeCalls(cct, thread, stayWithinModule, initialFrameDepth = None):
-    if not thread:
-        return
+def recordFunctionAndSubtree(tree, thread, function, frameCount, stayWithinModule):
+    _showOptimizationWarning(function)
+    subtree = Function(function.GetName())
+    tree.addCall(subtree)
 
-    if not initialFrameDepth:
-        initialFrameDepth = thread.GetNumFrames()
-
-    while True:
-        stopReason = thread.GetStopReason()
-        if not (stopReason == lldb.eStopReasonPlanComplete or stopReason == lldb.eStopReasonBreakpoint):
-            return
-
+    while _stoppedOnPlanOrBreakpoint(thread):
         thread.StepInto()
-        frame = thread.GetSelectedFrame()
+        nextFrame = thread.GetSelectedFrame()
 
         # Stay within our specified module.
-        if stayWithinModule and not frame.module == stayWithinModule:
-            thread.StepOutOfFrame(frame)
+        if stayWithinModule and not nextFrame.module == stayWithinModule:
+            thread.StepOutOfFrame(nextFrame)
             continue
 
         # Ignore inlined functions because the frame depth becomes unreliable.
-        if frame.is_inlined:
+        if nextFrame.is_inlined:
             continue
 
-        frameDepth = thread.GetNumFrames()
-        if frameDepth > initialFrameDepth:
-            function = frame.GetFunction()
-            if not function:
-                continue
-            _showOptimizationWarning(function)
-            functionCall = Function(function.GetName())
-            cct.addCall(functionCall)
-            recordSubtreeCalls(functionCall, thread, stayWithinModule, frameDepth)
-        elif frameDepth < initialFrameDepth:
-                return
+        nextFrameCount = thread.GetNumFrames()
+        if nextFrameCount > frameCount:
+            nextFunction = nextFrame.GetFunction()
+            if nextFunction:
+                recordFunctionAndSubtree(subtree, thread, nextFunction, nextFrameCount, stayWithinModule)
+        elif nextFrameCount < frameCount:
+            return
+
+def _stoppedOnPlanOrBreakpoint(thread):
+    stopReason = thread.GetStopReason()
+    return stopReason == lldb.eStopReasonPlanComplete or stopReason == lldb.eStopReasonBreakpoint
 
 # LLDB has stepping bugs if optimizations are enabled so give the user a heads up.
 # See: https://llvm.org/bugs/show_bug.cgi?id=27800
