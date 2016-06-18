@@ -71,9 +71,9 @@ def recordSubtreeCalls(cct, thread, stayWithinModule, initialFrameDepth = None):
 # inline-breakpoint-strategy) to avoid these bugs.
 skipOptimizationWarning = False
 def _showOptimizationWarning(function):
-            global skipOptimizationWarning
-            if not skipOptimizationWarning and function.GetIsOptimized():
-                message = ("Function '" + str(function.GetName()) + "' was compiled with optimizations "
-                           "which can cause stepping issues. Consider re-compiling with -O0.")
-                warnings.warn(message, RuntimeWarning)
-                skipOptimizationWarning = True
+    global skipOptimizationWarning
+    if not skipOptimizationWarning and function.GetIsOptimized():
+        message = ("Function '" + str(function.GetName()) + "' was compiled with optimizations "
+                   "which can cause stepping issues. Consider re-compiling with -O0.")
+        warnings.warn(message, RuntimeWarning)
+        skipOptimizationWarning = True
