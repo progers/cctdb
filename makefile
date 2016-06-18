@@ -36,4 +36,4 @@ tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quic
 	python -m unittest discover
 
 clean:
-	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/optimizedQuicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin testData/integrationTestOutputGood.json testData/integrationTestOutputBad.json
+	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/optimizedQuicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin
