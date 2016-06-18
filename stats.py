@@ -3,9 +3,9 @@
 # stats.py - calling context tree stats.
 
 import argparse
-from cct import CCT, Function
 from collections import defaultdict
 import json
+from record.cct import CCT, Function
 
 def _loadCCT(file):
     with open (file, 'r') as inFile:

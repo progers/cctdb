@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # LLDB is not on the python path by default. Try to give a helpful error message if it isn't found.
 try:
     import lldb
@@ -8,10 +6,10 @@ except ImportError:
     print "  export PYTHONPATH=/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Resources/Python"
     raise Exception("Couldn't locate the 'lldb' module, please set PYTHONPATH correctly")
 
-from cct import CCT, Function
+from record.cct import CCT, Function
+from record.record import record
 import gc
 import os
-from record import record
 import unittest
 import warnings
 
@@ -36,7 +34,7 @@ class TestRecorder:
         if not self._target:
             raise Exception("Could not create target '" + executable + "'")
         self._target.GetDebugger().SetAsync(False)
-        
+
         # Set a breakpoint before launching.
         self._target.BreakpointCreateByName(breakpointFunctionName)
         if self._target.num_breakpoints <= 0:
@@ -90,21 +88,21 @@ class TestRecord(unittest.TestCase):
         TestRecorder.cleanupRecorders()
 
     def testBasicRecordingAtMain(self):
-        cct = TestRecorder("testData/quicksort", ["1"], "main").record()
+        cct = TestRecorder("test/data/quicksort", ["1"], "main").record()
         self.assertEquals(cct.asJson(), '[{"name": "main", "calls": [{"name": "sort(int*, int)", "calls": [{"name": "quicksort(int*, int, int)"}]}]}]')
 
     def testBasicRecordingAtSubroutine(self):
-        sortCct = TestRecorder("testData/quicksort", ["1", "3", "2"], "sort(int*, int)").record()
+        sortCct = TestRecorder("test/data/quicksort", ["1", "3", "2"], "sort(int*, int)").record()
         self.assertEquals(sortCct.asJson(), '[{"name": "sort(int*, int)", "calls": [{"name": "quicksort(int*, int, int)", "calls": [{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}, {"name": "quicksort(int*, int, int)"}, {"name": "quicksort(int*, int, int)"}]}]}]')
 
-        partitionCct = TestRecorder("testData/quicksort", ["1", "3", "2"], "partition(int*, int, int)").record()
+        partitionCct = TestRecorder("test/data/quicksort", ["1", "3", "2"], "partition(int*, int, int)").record()
         self.assertEquals(partitionCct.asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}]')
 
-        swapCct = TestRecorder("testData/quicksort", ["1", "3", "2"], "swap(int*, int, int)").record()
+        swapCct = TestRecorder("test/data/quicksort", ["1", "3", "2"], "swap(int*, int, int)").record()
         self.assertEquals(swapCct.asJson(), '[{"name": "swap(int*, int, int)"}]')
 
     def testMultipleBreakpoints(self):
-        recorder = TestRecorder("testData/quicksort", ["3", "1", "2", "3", "2"], "partition(int*, int, int)")
+        recorder = TestRecorder("test/data/quicksort", ["3", "1", "2", "3", "2"], "partition(int*, int, int)")
         self.assertEquals(recorder.record().asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}]')
         recorder.continueToNextBreakpoint()
         self.assertEquals(recorder.record().asJson(), '[{"name": "partition(int*, int, int)", "calls": [{"name": "swap(int*, int, int)"}]}]')
@@ -112,20 +110,20 @@ class TestRecord(unittest.TestCase):
         self.assertEquals(recorder.record().asJson(), '[{"name": "partition(int*, int, int)"}]')
 
     def testRecordStaysInSpecifiedLibrary(self):
-        cct = TestRecorder("testData/dynamicLoaderDarwin", [], "main").record()
+        cct = TestRecorder("test/data/dynamicLoaderDarwin", [], "main").record()
         # Ensure no DynamicClassDarwin calls are in the tree.
         self.assertEquals(cct.asJson(), '[{"name": "main", "calls": [{"name": "notDynamicC()"}]}]')
 
     def testRecordDoesNotStayInSpecifiedLibrary(self):
-        cct = TestRecorder("testData/dynamicLoaderDarwin", [], "main").record(False)
+        cct = TestRecorder("test/data/dynamicLoaderDarwin", [], "main").record(False)
         self.assertIn("DynamicClassDarwin", cct.asJson())
 
     @unittest.skip("FIXME(phil): support thread stepping in.")
     def testRecordingWithThreads(self):
-        recorder = TestRecorder("testData/fibonacciThread", ["3"], "computeFibonacci(unsigned long)")
+        recorder = TestRecorder("test/data/fibonacciThread", ["3"], "computeFibonacci(unsigned long)")
         firstCall = recorder.record()
         self.assertEquals(firstCall.asJson(), '[{"name": "computeFibonacci(unsigned long)", "calls": [{"name": "fib(unsigned long)", "calls": [{"name": "fib(unsigned long)"}, {"name": "fib(unsigned long)"}]}]}]')
-        
+
         # Each call to computeFibonacci should have the same subtree.
         recorder.continueToNextBreakpoint()
         secondCall = recorder.record()
@@ -137,11 +135,11 @@ class TestRecord(unittest.TestCase):
     # Not supported! See comment in recorder.py, recordSubtreeCalls.
     # This test checks for assertions and that that recording works as if new threads never existed.
     def testRecordingIntoNewThreads(self):
-        cct = TestRecorder("testData/fibonacciThread", ["3"], "main").record()
+        cct = TestRecorder("test/data/fibonacciThread", ["3"], "main").record()
         self.assertEquals(cct.asJson(), '[{"name": "main"}]')
 
     def testComplexInlinedTree(self):
-        recorder = TestRecorder("testData/complexInlinedTree", [], "A(int&)")
+        recorder = TestRecorder("test/data/complexInlinedTree", [], "A(int&)")
 
         firstBranch = recorder.record()
         self.assertEquals(firstBranch.asJson(), '[{"name": "A(int&)", "calls": [{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]}]')
@@ -151,11 +149,11 @@ class TestRecord(unittest.TestCase):
         self.assertEquals(secondBranch.asJson(), '[{"name": "A(int&)"}]')
 
     def testComplexInlinedTreeWithDeepBreakpoint(self):
-        cct = TestRecorder("testData/complexInlinedTree", [], "C(int&)").record()
+        cct = TestRecorder("test/data/complexInlinedTree", [], "C(int&)").record()
         self.assertEquals(cct.asJson(), '[{"name": "C(int&)", "calls": [{"name": "A(int&)", "calls": [{"name": "A(int&)"}]}]}]')
 
     def testComplexInlinedCases(self):
-        recorder = TestRecorder("testData/complexInlinedCases", [], "A(int&)")
+        recorder = TestRecorder("test/data/complexInlinedCases", [], "A(int&)")
 
         branch0 = recorder.record()
         self.assertEquals(branch0.asJson(), '[{"name": "A(int&)", "calls": [{"name": "C(int&)"}]}]')
@@ -169,12 +167,12 @@ class TestRecord(unittest.TestCase):
         self.assertEquals(branch3.asJson(), '[{"name": "A(int&)"}]')
 
     def testSingleInstructionInline(self):
-        cct = TestRecorder("testData/singleInstructionInline", [], "A()").record()
+        cct = TestRecorder("test/data/singleInstructionInline", [], "A()").record()
         self.assertEquals(cct.asJson(), '[{"name": "A()", "calls": [{"name": "C()", "calls": [{"name": "D()"}]}]}]')
 
     def testOptimizationWarning(self):
         with warnings.catch_warnings(record=True) as w:
-            cct = TestRecorder("testData/optimizedQuicksort", ["1"], "main").record()
+            cct = TestRecorder("test/data/optimizedQuicksort", ["1"], "main").record()
             self.assertIn("was compiled with optimizations which can cause stepping issues", str(w[0].message))
 
 if __name__ == "__main__":

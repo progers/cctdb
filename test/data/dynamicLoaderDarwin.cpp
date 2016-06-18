@@ -10,7 +10,7 @@ void notDynamicC() {
 }
 
 int main(int argc, char *argv[]) {
-    void* handle = dlopen("testData/dynamicClassDarwin.so", RTLD_LAZY);
+    void* handle = dlopen("test/data/dynamicClassDarwin.so", RTLD_LAZY);
 
     DynamicClassDarwin* (*create)();
     create = (DynamicClassDarwin*(*)())dlsym(handle, "create");

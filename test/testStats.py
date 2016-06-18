@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-from cct import CCT, Function
+from record.cct import CCT, Function
 from collections import defaultdict
 import stats
 import unittest

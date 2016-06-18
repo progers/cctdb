@@ -7,11 +7,11 @@
 #
 # Use "help record" for additional instructions for using the record command.
 
-from cct import CCT
 import commands
 import lldb
 import optparse
-from record import record
+from record.cct import CCT, Function
+from record.record import record
 import shlex
 
 def createParser():

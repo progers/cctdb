@@ -5,35 +5,35 @@ all: examples/brokenQuicksort/brokenQuicksort tests
 examples/brokenQuicksort/brokenQuicksort: examples/brokenQuicksort/brokenQuicksort.cpp
 	g++ -g -Wall -std=c++11 -O0 -fno-inline examples/brokenQuicksort/brokenQuicksort.cpp -o examples/brokenQuicksort/brokenQuicksort
 
-testData/fibonacci: testData/fibonacci.cpp
-	g++ -g -Wall -std=c++11 -O0 -fno-inline testData/fibonacci.cpp -o testData/fibonacci
+test/data/fibonacci: test/data/fibonacci.cpp
+	g++ -g -Wall -std=c++11 -O0 -fno-inline test/data/fibonacci.cpp -o test/data/fibonacci
 
-testData/quicksort: testData/quicksort.cpp
-	g++ -g -Wall -std=c++11 -O0 -fno-inline testData/quicksort.cpp -o testData/quicksort
+test/data/quicksort: test/data/quicksort.cpp
+	g++ -g -Wall -std=c++11 -O0 -fno-inline test/data/quicksort.cpp -o test/data/quicksort
 
-testData/optimizedQuicksort: testData/quicksort.cpp
-	g++ -g -Wall -std=c++11 -O1 -fno-inline testData/quicksort.cpp -o testData/optimizedQuicksort
+test/data/optimizedQuicksort: test/data/quicksort.cpp
+	g++ -g -Wall -std=c++11 -O1 -fno-inline test/data/quicksort.cpp -o test/data/optimizedQuicksort
 
-testData/fibonacciThread: testData/fibonacciThread.cpp
-	g++ -g -Wall -std=c++11 -stdlib=libc++ -O0 -fno-inline testData/fibonacciThread.cpp -o testData/fibonacciThread
+test/data/fibonacciThread: test/data/fibonacciThread.cpp
+	g++ -g -Wall -std=c++11 -stdlib=libc++ -O0 -fno-inline test/data/fibonacciThread.cpp -o test/data/fibonacciThread
 
-testData/complexInlinedTree: testData/complexInlinedTree.cpp
-	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline testData/complexInlinedTree.cpp -o testData/complexInlinedTree
+test/data/complexInlinedTree: test/data/complexInlinedTree.cpp
+	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline test/data/complexInlinedTree.cpp -o test/data/complexInlinedTree
 
-testData/complexInlinedCases: testData/complexInlinedCases.cpp
-	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline testData/complexInlinedCases.cpp -o testData/complexInlinedCases
+test/data/complexInlinedCases: test/data/complexInlinedCases.cpp
+	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline test/data/complexInlinedCases.cpp -o test/data/complexInlinedCases
 
-testData/singleInstructionInline: testData/singleInstructionInline.cpp
-	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline testData/singleInstructionInline.cpp -o testData/singleInstructionInline
+test/data/singleInstructionInline: test/data/singleInstructionInline.cpp
+	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline test/data/singleInstructionInline.cpp -o test/data/singleInstructionInline
 
-testData/dynamicClassDarwin.so: testData/dynamicClassDarwin.h testData/dynamicClassDarwin.cpp
-	g++ -g -Wall -std=c++11 -O0 -fno-inline -dynamiclib -flat_namespace testData/dynamicClassDarwin.cpp -o testData/dynamicClassDarwin.so
+test/data/dynamicClassDarwin.so: test/data/dynamicClassDarwin.h test/data/dynamicClassDarwin.cpp
+	g++ -g -Wall -std=c++11 -O0 -fno-inline -dynamiclib -flat_namespace test/data/dynamicClassDarwin.cpp -o test/data/dynamicClassDarwin.so
 
-testData/dynamicLoaderDarwin: testData/dynamicClassDarwin.h testData/dynamicLoaderDarwin.cpp
-	g++ -g -Wall -std=c++11 -O0 -fno-inline testData/dynamicLoaderDarwin.cpp -o testData/dynamicLoaderDarwin
+test/data/dynamicLoaderDarwin: test/data/dynamicClassDarwin.h test/data/dynamicLoaderDarwin.cpp
+	g++ -g -Wall -std=c++11 -O0 -fno-inline test/data/dynamicLoaderDarwin.cpp -o test/data/dynamicLoaderDarwin
 
-tests: examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/optimizedQuicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin
+tests: examples/brokenQuicksort/brokenQuicksort test/data/fibonacci test/data/quicksort test/data/optimizedQuicksort test/data/fibonacciThread test/data/complexInlinedTree test/data/complexInlinedCases test/data/singleInstructionInline test/data/dynamicClassDarwin.so test/data/dynamicLoaderDarwin
 	python -m unittest discover
 
 clean:
-	rm examples/brokenQuicksort/brokenQuicksort testData/fibonacci testData/quicksort testData/optimizedQuicksort testData/fibonacciThread testData/complexInlinedTree testData/complexInlinedCases testData/singleInstructionInline testData/dynamicClassDarwin.so testData/dynamicLoaderDarwin
+	rm examples/brokenQuicksort/brokenQuicksort test/data/fibonacci test/data/quicksort test/data/optimizedQuicksort test/data/fibonacciThread test/data/complexInlinedTree test/data/complexInlinedCases test/data/singleInstructionInline test/data/dynamicClassDarwin.so test/data/dynamicLoaderDarwin
