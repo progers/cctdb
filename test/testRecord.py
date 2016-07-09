@@ -50,8 +50,8 @@ class TestRecorder:
             if breakpoint.GetNumLocations() <= 0:
                 raise Exception("Could not break on function. Check the specified function name.")
 
-    def record(self, stayInCurrentModule = True):
-        return record(self._target, stayInCurrentModule = stayInCurrentModule)
+    def record(self, stayInCurrentModule = True, functionNameRegex = None):
+        return record(self._target, stayInCurrentModule = stayInCurrentModule, functionNameRegex = functionNameRegex)
 
     def continueToNextBreakpoint(self):
         self._target.GetProcess().Continue()
@@ -174,6 +174,18 @@ class TestRecord(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             cct = TestRecorder("test/data/out/optimizedQuicksort", ["1"], "main").record()
             self.assertIn("was compiled with optimizations which can cause stepping issues", str(w[0].message))
+
+    def testIncludeRegex(self):
+        swapCct = TestRecorder("test/data/out/quicksort", ["1", "3", "2"], "swap(int*, int, int)").record(functionNameRegex = ".*sort|swap")
+        self.assertEquals(swapCct.asJson(), '[{"name": "swap(int*, int, int)"}]')
+
+        sortOrSwapCct = TestRecorder("test/data/out/quicksort", ["1", "3", "2"], "sort(int*, int)").record(functionNameRegex = ".*sort|swap")
+        # quicksort(...) calls swap(...) but swap(...) should not be present because the subtree below quicksort(...) should be pruned.
+        self.assertEquals(sortOrSwapCct.asJson(), '[{"name": "sort(int*, int)", "calls": [{"name": "quicksort(int*, int, int)", "calls": [{"name": "quicksort(int*, int, int)"}, {"name": "quicksort(int*, int, int)"}]}]}]')
+
+    def testExcludeRegex(self):
+        noSwapCct = TestRecorder("test/data/out/quicksort", ["1", "3", "2"], "sort(int*, int)").record(functionNameRegex = "^(?!swap).*")
+        self.assertEquals(noSwapCct.asJson(), '[{"name": "sort(int*, int)", "calls": [{"name": "quicksort(int*, int, int)", "calls": [{"name": "partition(int*, int, int)"}, {"name": "quicksort(int*, int, int)"}, {"name": "quicksort(int*, int, int)"}]}]}]')
 
 if __name__ == "__main__":
     unittest.main()

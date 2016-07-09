@@ -20,8 +20,9 @@ def createParser():
 current function. Typical usage is to stop on a breakpoint then run "record -o cct.json" to record
 all calls and write the output to cct.json.'''
     parser = optparse.OptionParser(description=description, prog="record", usage=usage)
-    parser.add_option("-o", "--output", action="store", dest="output", help="write recording to an output file")
-    parser.add_option("-a", "--allmodules", action="store_true", dest="allModules", help="do not restrict recording to the current module", default=False)
+    parser.add_option("-o", "--output", action="store", dest="output", help="Write recording to an output file instead of the console.")
+    parser.add_option("-a", "--allmodules", action="store_true", dest="allModules", help="Do not restrict recording to the current module.", default=False)
+    parser.add_option("-e", "--regex", action="store", dest="regex", help="Restrict recording to functions matching a regular expression. E.g., to stay within a namespace use '^namespace::'.")
     return parser
 
 def recordCallingContextTree(debugger, command, result, dict):
@@ -51,7 +52,7 @@ def recordCallingContextTree(debugger, command, result, dict):
 
     cct = None
     try:
-        cct = record(target, stayInCurrentModule = not options.allModules)
+        cct = record(target, stayInCurrentModule = not options.allModules, functionNameRegex = options.regex)
     except Exception as exception:
         result.SetError(str(exception))
     if isinstance(cct, CCT):

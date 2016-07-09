@@ -2,13 +2,14 @@
 
 from cct import CCT, Function
 import lldb
+import re
 import warnings
 
 # Record a calling context tree rooted at the current frame.
 # TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
 # callbacks, we'll step over the creation of new threads without stepping into them. There's some
 # discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
-def record(target, stayInCurrentModule = True):
+def record(target, stayInCurrentModule = True, functionNameRegex = None):
     thread = target.GetProcess().GetSelectedThread()
     frame = thread.GetSelectedFrame()
     function = frame.GetFunction()
@@ -17,14 +18,21 @@ def record(target, stayInCurrentModule = True):
 
     cct = CCT()
     stayInModule = frame.GetModule() if stayInCurrentModule else None
-    recordFunctionAndSubtree(cct, thread, function, thread.GetNumFrames(), stayInModule)
+    regex = re.compile(functionNameRegex) if functionNameRegex else None
+    _recordFunctionAndSubtree(cct, thread, function, thread.GetNumFrames(), stayInModule, regex)
     return cct
 
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
 # a CCT subtree.
-def recordFunctionAndSubtree(tree, thread, function, frameCount, stayInModule):
+def _recordFunctionAndSubtree(tree, thread, function, frameCount, stayInModule, regex):
+    # Skip this subtree if the regex does not match the function name.
+    functionName = function.GetName()
+    if regex and not regex.match(functionName):
+        thread.StepOutOfFrame(thread.GetSelectedFrame())
+        return
+
     _warnAboutOptimizations(function)
-    subtree = Function(function.GetName())
+    subtree = Function(functionName)
     tree.addCall(subtree)
 
     while _stoppedOnPlanOrBreakpoint(thread):
@@ -44,7 +52,7 @@ def recordFunctionAndSubtree(tree, thread, function, frameCount, stayInModule):
         if nextFrameCount > frameCount:
             nextFunction = nextFrame.GetFunction()
             if nextFunction:
-                recordFunctionAndSubtree(subtree, thread, nextFunction, nextFrameCount, stayInModule)
+                _recordFunctionAndSubtree(subtree, thread, nextFunction, nextFrameCount, stayInModule, regex)
         elif nextFrameCount < frameCount:
             return
 
