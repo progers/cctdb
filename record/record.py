@@ -22,11 +22,8 @@ def record(target, shouldStayWithinModule = True):
 
 # Given a thread with a current frame depth of N, record all N+1 calls and add these calls to
 # a CCT subtree.
-# TODO(phil): support stepping into new threads. Because LLDB doesn't support thread creation
-# callbacks, we'll step over the creation of new threads without stepping into them. There's some
-# discussion on this issue at http://lists.cs.uiuc.edu/pipermail/lldb-dev/2015-July/007728.html.
 def recordFunctionAndSubtree(tree, thread, function, frameCount, stayWithinModule):
-    _showOptimizationWarning(function)
+    _warnAboutOptimizations(function)
     subtree = Function(function.GetName())
     tree.addCall(subtree)
 
@@ -60,11 +57,11 @@ def _stoppedOnPlanOrBreakpoint(thread):
 #
 # TODO: Investigate if we can dynamically change LLDB settings (e.g., use-fast-stepping,
 # inline-breakpoint-strategy) to avoid these bugs.
-skipOptimizationWarning = False
-def _showOptimizationWarning(function):
-    global skipOptimizationWarning
-    if not skipOptimizationWarning and function.GetIsOptimized():
+alreadyShowedOptimizationWarning = False
+def _warnAboutOptimizations(function):
+    global alreadyShowedOptimizationWarning
+    if not alreadyShowedOptimizationWarning and function.GetIsOptimized():
         message = ("Function '" + str(function.GetName()) + "' was compiled with optimizations "
                    "which can cause stepping issues. Consider re-compiling with -O0.")
         warnings.warn(message, RuntimeWarning)
-        skipOptimizationWarning = True
+        alreadyShowedOptimizationWarning = True
