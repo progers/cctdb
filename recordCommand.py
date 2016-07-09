@@ -16,10 +16,12 @@ import shlex
 
 def createParser():
     usage = "usage: %prog [options]"
-    parser = optparse.OptionParser(description="Record a calling context tree", prog="record", usage=usage)
+    description='''Record a calling context tree (tree of all function calls) starting at the
+current function. Typical usage is to stop on a breakpoint then run "record -o cct.json" to record
+all calls and write the output to cct.json.'''
+    parser = optparse.OptionParser(description=description, prog="record", usage=usage)
     parser.add_option("-o", "--output", action="store", dest="output", help="write recording to an output file")
-    # TODO: Add option to stay within a module.
-    # TODO: Improve the built-in description to provide a simple example.
+    parser.add_option("-a", "--allmodules", action="store_true", dest="allModules", help="do not restrict recording to the current module", default=False)
     return parser
 
 def recordCallingContextTree(debugger, command, result, dict):
@@ -49,7 +51,7 @@ def recordCallingContextTree(debugger, command, result, dict):
 
     cct = None
     try:
-        cct = record(target)
+        cct = record(target, stayInCurrentModule = not options.allModules)
     except Exception as exception:
         result.SetError(str(exception))
     if isinstance(cct, CCT):
@@ -63,6 +65,6 @@ def recordCallingContextTree(debugger, command, result, dict):
 def __lldb_init_module(debugger, dict):
     # This initializer is being run from LLDB in the embedded command interpreter
     parser = createParser()
-    record.__doc__ = parser.format_help()
+    recordCallingContextTree.__doc__ = parser.format_help()
     debugger.HandleCommand("command script add -f recordCommand.recordCallingContextTree record")
     print "The \"record\" command has been installed, type \"help record\" for more information."

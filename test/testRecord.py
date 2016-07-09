@@ -50,8 +50,8 @@ class TestRecorder:
             if breakpoint.GetNumLocations() <= 0:
                 raise Exception("Could not break on function. Check the specified function name.")
 
-    def record(self, shouldStayWithinModule = True):
-        return record(self._target, shouldStayWithinModule)
+    def record(self, stayInCurrentModule = True):
+        return record(self._target, stayInCurrentModule = stayInCurrentModule)
 
     def continueToNextBreakpoint(self):
         self._target.GetProcess().Continue()
@@ -110,12 +110,12 @@ class TestRecord(unittest.TestCase):
         self.assertEquals(recorder.record().asJson(), '[{"name": "partition(int*, int, int)"}]')
 
     def testRecordStaysInSpecifiedLibrary(self):
-        cct = TestRecorder("test/data/out/dynamicLoaderDarwin", [], "main").record()
+        cct = TestRecorder("test/data/out/dynamicLoaderDarwin", [], "main").record(stayInCurrentModule = True)
         # Ensure no DynamicClassDarwin calls are in the tree.
         self.assertEquals(cct.asJson(), '[{"name": "main", "calls": [{"name": "notDynamicC()"}]}]')
 
     def testRecordDoesNotStayInSpecifiedLibrary(self):
-        cct = TestRecorder("test/data/out/dynamicLoaderDarwin", [], "main").record(False)
+        cct = TestRecorder("test/data/out/dynamicLoaderDarwin", [], "main").record(stayInCurrentModule = False)
         self.assertIn("DynamicClassDarwin", cct.asJson())
 
     @unittest.skip("FIXME(phil): support thread stepping in.")
