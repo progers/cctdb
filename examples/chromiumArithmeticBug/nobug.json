@@ -1,0 +1,1999 @@
+[
+{
+"name": "blink::LayoutBlockFlow::rebuildFloatsFromIntruding()", 
+"calls": [
+{
+"name": "blink::LayoutObject::childrenInline() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::childrenInline() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBlockFlow::avoidsFloats() const", 
+"calls": [
+{
+"name": "blink::LayoutBox::avoidsFloats() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isAtomicInlineLevel() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isAtomicInlineLevel() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::node() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isAnonymous() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isAnonymous() const"
+}
+]
+}, 
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(std::nullptr_t)", 
+"calls": [
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(std::nullptr_t)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::Member(std::nullptr_t)"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::shouldBeConsideredAsReplaced(blink::Node*)"
+}, 
+{
+"name": "blink::LayoutObject::hasOverflowClip() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::hasOverflowClip() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isHR() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::node() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isAnonymous() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isAnonymous() const"
+}
+]
+}, 
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(std::nullptr_t)", 
+"calls": [
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(std::nullptr_t)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::Member(std::nullptr_t)"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::isHTMLHRElement(blink::Node const*)"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isLegend() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::node() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isAnonymous() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isAnonymous() const"
+}
+]
+}, 
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(std::nullptr_t)", 
+"calls": [
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(std::nullptr_t)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::Member(std::nullptr_t)"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::isHTMLLegendElement(blink::Node const*)"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isWritingModeRoot() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isFlexItemIncludingDeprecated() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isInline() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isInline() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFloatingOrOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFloating() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::floating() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isOutOfFlowPositioned() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::isFlexibleBoxIncludingDeprecated() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFlexibleBox() const"
+}, 
+{
+"name": "blink::LayoutObject::isDeprecatedFlexibleBox() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::containsPaint() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::containsLayout() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::hasAutoColumnCount() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::hasAutoColumnWidth() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isDocumentElement() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::document() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::operator->() const"
+}, 
+{
+"name": "blink::Node::document() const", 
+"calls": [
+{
+"name": "blink::Node::treeScope() const", 
+"calls": [
+{
+"name": "blink::Member<blink::TreeScope>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::TreeScope>::operator*() const"
+}
+]
+}, 
+{
+"name": "blink::TreeScope::document() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Document>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Document>::operator*() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Document::documentElement() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Element>::get() const"
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isLayoutView() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFloatingOrOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFloating() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::floating() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isOutOfFlowPositioned() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isTableCell() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutBlockFlow::isLayoutBlockFlow() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::toLayoutBlockFlow(blink::LayoutObject*)", 
+"calls": [
+{
+"name": "blink::LayoutBlockFlow::isLayoutBlockFlow() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::previousSibling() const"
+}, 
+{
+"name": "blink::LayoutObject::isBox() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isBox() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBlock::isLayoutBlock() const"
+}, 
+{
+"name": "blink::toLayoutBlock(blink::LayoutObject*)", 
+"calls": [
+{
+"name": "blink::LayoutBlock::isLayoutBlock() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBlockFlow::avoidsFloats() const", 
+"calls": [
+{
+"name": "blink::LayoutBox::avoidsFloats() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isAtomicInlineLevel() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isAtomicInlineLevel() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::node() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isAnonymous() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isAnonymous() const"
+}
+]
+}, 
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(blink::UntracedMember<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(blink::UntracedMember<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::Member(blink::Member<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::checkPointer()"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::shouldBeConsideredAsReplaced(blink::Node*)", 
+"calls": [
+{
+"name": "blink::Node::isElementNode() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}, 
+{
+"name": "blink::toElement(blink::Node*)", 
+"calls": [
+{
+"name": "blink::Node::isElementNode() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Element::isFormControlElement() const"
+}, 
+{
+"name": "blink::toElement(blink::Node*)", 
+"calls": [
+{
+"name": "blink::Node::isElementNode() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::isHTMLImageElement(blink::Node const*)", 
+"calls": [
+{
+"name": "blink::isHTMLImageElement(blink::Node const&)", 
+"calls": [
+{
+"name": "blink::Node::isHTMLElement() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}, 
+{
+"name": "blink::toHTMLElement(blink::Node const&)", 
+"calls": [
+{
+"name": "blink::Node::isHTMLElement() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::isHTMLImageElement(blink::HTMLElement const&)", 
+"calls": [
+{
+"name": "blink::HTMLElement::hasTagName(blink::HTMLQualifiedName const&) const", 
+"calls": [
+{
+"name": "blink::QualifiedName::localName() const"
+}, 
+{
+"name": "blink::Element::hasLocalName(WTF::AtomicString const&) const", 
+"calls": [
+{
+"name": "blink::QualifiedName::localName() const"
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::hasOverflowClip() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::hasOverflowClip() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isHR() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::node() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isAnonymous() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isAnonymous() const"
+}
+]
+}, 
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(blink::UntracedMember<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(blink::UntracedMember<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::Member(blink::Member<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::checkPointer()"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::isHTMLHRElement(blink::Node const*)", 
+"calls": [
+{
+"name": "blink::isHTMLHRElement(blink::Node const&)", 
+"calls": [
+{
+"name": "blink::Node::isHTMLElement() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}, 
+{
+"name": "blink::toHTMLElement(blink::Node const&)", 
+"calls": [
+{
+"name": "blink::Node::isHTMLElement() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::isHTMLHRElement(blink::HTMLElement const&)", 
+"calls": [
+{
+"name": "blink::HTMLElement::hasTagName(blink::HTMLQualifiedName const&) const", 
+"calls": [
+{
+"name": "blink::QualifiedName::localName() const"
+}, 
+{
+"name": "blink::Element::hasLocalName(WTF::AtomicString const&) const", 
+"calls": [
+{
+"name": "blink::QualifiedName::localName() const"
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isLegend() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::node() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isAnonymous() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isAnonymous() const"
+}
+]
+}, 
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(blink::UntracedMember<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::UntracedMember<blink::Node>::UntracedMember(blink::UntracedMember<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::Member(blink::Member<blink::Node> const&)", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::checkPointer()"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::isHTMLLegendElement(blink::Node const*)", 
+"calls": [
+{
+"name": "blink::isHTMLLegendElement(blink::Node const&)", 
+"calls": [
+{
+"name": "blink::Node::isHTMLElement() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}, 
+{
+"name": "blink::toHTMLElement(blink::Node const&)", 
+"calls": [
+{
+"name": "blink::Node::isHTMLElement() const", 
+"calls": [
+{
+"name": "blink::Node::getFlag(blink::Node::NodeFlags) const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::isHTMLLegendElement(blink::HTMLElement const&)", 
+"calls": [
+{
+"name": "blink::HTMLElement::hasTagName(blink::HTMLQualifiedName const&) const", 
+"calls": [
+{
+"name": "blink::QualifiedName::localName() const"
+}, 
+{
+"name": "blink::Element::hasLocalName(WTF::AtomicString const&) const", 
+"calls": [
+{
+"name": "blink::QualifiedName::localName() const"
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isWritingModeRoot() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isFlexItemIncludingDeprecated() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isInline() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isInline() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFloatingOrOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFloating() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::floating() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isOutOfFlowPositioned() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::isFlexibleBoxIncludingDeprecated() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFlexibleBox() const"
+}, 
+{
+"name": "blink::LayoutObject::isDeprecatedFlexibleBox() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::containsPaint() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::containsLayout() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::hasAutoColumnCount() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::hasAutoColumnWidth() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::toLayoutBlock(blink::LayoutObject*)", 
+"calls": [
+{
+"name": "blink::LayoutBlock::isLayoutBlock() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBlock::createsNewFormattingContext() const", 
+"calls": [
+{
+"name": "blink::LayoutBlock::isInlineBlockOrInlineTable() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isInline() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isInline() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFloatingOrOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFloating() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::floating() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isOutOfFlowPositioned() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::hasOverflowClip() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::hasOverflowClip() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isFlexItemIncludingDeprecated() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isInline() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isInline() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFloatingOrOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFloating() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::floating() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isOutOfFlowPositioned() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::isFlexibleBoxIncludingDeprecated() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFlexibleBox() const"
+}, 
+{
+"name": "blink::LayoutObject::isDeprecatedFlexibleBox() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::specifiesColumns() const", 
+"calls": [
+{
+"name": "blink::ComputedStyle::hasAutoColumnCount() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::ComputedStyle::hasAutoColumnWidth() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isLayoutFlowThread() const"
+}, 
+{
+"name": "blink::LayoutObject::isTableCell() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isTableCaption() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFieldset() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isWritingModeRoot() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isDocumentElement() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::document() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::operator->() const"
+}, 
+{
+"name": "blink::Node::document() const", 
+"calls": [
+{
+"name": "blink::Node::treeScope() const", 
+"calls": [
+{
+"name": "blink::Member<blink::TreeScope>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::TreeScope>::operator*() const"
+}
+]
+}, 
+{
+"name": "blink::TreeScope::document() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Document>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Document>::operator*() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Document::documentElement() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Element>::get() const"
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isColumnSpanAll() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getColumnSpan() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isGridItem() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::isLayoutGrid() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::containsPaint() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::containsLayout() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::logicalTop() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::isHorizontalWritingMode() const", 
+"calls": [
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}, 
+{
+"name": "blink::isHorizontalWritingMode(blink::WritingMode)"
+}
+]
+}, 
+{
+"name": "blink::LayoutRect::y() const", 
+"calls": [
+{
+"name": "blink::LayoutPoint::y() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::toLayoutBlockFlow(blink::LayoutObject*)", 
+"calls": [
+{
+"name": "blink::LayoutBlockFlow::isLayoutBlockFlow() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBlockFlow::isSelfCollapsingBlock() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::needsLayout() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::selfNeedsLayout() const"
+}, 
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::normalChildNeedsLayout() const"
+}, 
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::posChildNeedsLayout() const"
+}, 
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::needsSimplifiedNormalFlowLayout() const"
+}, 
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::needsPositionedMovementLayout() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBlockFlow::checkIfIsSelfCollapsingBlock() const", 
+"calls": [
+{
+"name": "blink::LayoutBlock::createsNewFormattingContext() const", 
+"calls": [
+{
+"name": "blink::LayoutBlock::isInlineBlockOrInlineTable() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isInline() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isInline() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFloatingOrOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFloating() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::floating() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isOutOfFlowPositioned() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::hasOverflowClip() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::hasOverflowClip() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isFlexItemIncludingDeprecated() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isInline() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isInline() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFloatingOrOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFloating() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::floating() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isOutOfFlowPositioned() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::isOutOfFlowPositioned() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::isFlexibleBoxIncludingDeprecated() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isFlexibleBox() const"
+}, 
+{
+"name": "blink::LayoutObject::isDeprecatedFlexibleBox() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::specifiesColumns() const", 
+"calls": [
+{
+"name": "blink::ComputedStyle::hasAutoColumnCount() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::ComputedStyle::hasAutoColumnWidth() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isLayoutFlowThread() const"
+}, 
+{
+"name": "blink::LayoutObject::isTableCell() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isTableCaption() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isFieldset() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isWritingModeRoot() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isDocumentElement() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::document() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Node>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Node>::operator->() const"
+}, 
+{
+"name": "blink::Node::document() const", 
+"calls": [
+{
+"name": "blink::Node::treeScope() const", 
+"calls": [
+{
+"name": "blink::Member<blink::TreeScope>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::TreeScope>::operator*() const"
+}
+]
+}, 
+{
+"name": "blink::TreeScope::document() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Document>::operator bool() const"
+}, 
+{
+"name": "blink::Member<blink::Document>::operator*() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::Document::documentElement() const", 
+"calls": [
+{
+"name": "blink::Member<blink::Element>::get() const"
+}
+]
+}, 
+{
+"name": "blink::Member<blink::Node>::operator blink::Node*() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::isColumnSpanAll() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::getColumnSpan() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}, 
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleMultiColData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::isGridItem() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::parent() const"
+}, 
+{
+"name": "blink::LayoutObject::isLayoutGrid() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isOfType(blink::LayoutObject::LayoutObjectType) const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::containsPaint() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::containsLayout() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::operator->() const", 
+"calls": [
+{
+"name": "blink::DataRef<blink::StyleRareNonInheritedData>::get() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::needsLayout() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::selfNeedsLayout() const"
+}, 
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::normalChildNeedsLayout() const"
+}, 
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::posChildNeedsLayout() const"
+}, 
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::needsSimplifiedNormalFlowLayout() const"
+}, 
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::needsPositionedMovementLayout() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::logicalHeight() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::isHorizontalWritingMode() const", 
+"calls": [
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}, 
+{
+"name": "blink::isHorizontalWritingMode(blink::WritingMode)"
+}
+]
+}, 
+{
+"name": "blink::LayoutRect::height() const", 
+"calls": [
+{
+"name": "blink::LayoutSize::height() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutUnit::LayoutUnit()", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()"
+}
+]
+}, 
+{
+"name": "blink::operator>(blink::LayoutUnit const&, blink::LayoutUnit const&)", 
+"calls": [
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}, 
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::toLayoutBlock(blink::LayoutObject*)", 
+"calls": [
+{
+"name": "blink::LayoutBlock::isLayoutBlock() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::logicalTop() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::isHorizontalWritingMode() const", 
+"calls": [
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}, 
+{
+"name": "blink::isHorizontalWritingMode(blink::WritingMode)"
+}
+]
+}, 
+{
+"name": "blink::LayoutRect::y() const", 
+"calls": [
+{
+"name": "blink::LayoutPoint::y() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::operator>(blink::LayoutUnit const&, blink::LayoutUnit const&)", 
+"calls": [
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}, 
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}
+]
+}, 
+{
+"name": "blink::toLayoutBlockFlow(blink::LayoutObject*)", 
+"calls": [
+{
+"name": "blink::LayoutBlockFlow::isLayoutBlockFlow() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutBox::logicalTop() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::style() const"
+}, 
+{
+"name": "blink::ComputedStyle::isHorizontalWritingMode() const", 
+"calls": [
+{
+"name": "blink::ComputedStyle::getWritingMode() const"
+}, 
+{
+"name": "blink::isHorizontalWritingMode(blink::WritingMode)"
+}
+]
+}, 
+{
+"name": "blink::LayoutRect::y() const", 
+"calls": [
+{
+"name": "blink::LayoutPoint::y() const"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::operator-=(blink::LayoutUnit&, blink::LayoutUnit const&)", 
+"calls": [
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}, 
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}, 
+{
+"name": "blink::LayoutUnit::setRawValue(int)"
+}
+]
+}, 
+{
+"name": "blink::LayoutBlockFlow::lowestFloatLogicalBottom(blink::FloatingObject::Type) const", 
+"calls": [
+{
+"name": "blink::FloatingObjects::lowestFloatLogicalBottom(blink::FloatingObject::Type)", 
+"calls": [
+{
+"name": "blink::FloatingObjects::hasLowestFloatLogicalBottomCached(bool, blink::FloatingObject::Type) const"
+}, 
+{
+"name": "blink::FloatingObjects::hasLowestFloatLogicalBottomCached(bool, blink::FloatingObject::Type) const"
+}, 
+{
+"name": "blink::FloatingObjects::getCachedlowestFloatLogicalBottom(blink::FloatingObject::Type) const", 
+"calls": [
+{
+"name": "blink::LayoutBlockFlow::logicalBottomForFloat(blink::FloatingObject const&) const", 
+"calls": [
+{
+"name": "blink::LayoutObject::isHorizontalWritingMode() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::horizontalWritingMode() const"
+}
+]
+}, 
+{
+"name": "blink::FloatingObject::maxY() const", 
+"calls": [
+{
+"name": "blink::FloatingObject::isPlaced() const"
+}, 
+{
+"name": "blink::LayoutRect::maxY() const", 
+"calls": [
+{
+"name": "blink::LayoutRect::y() const", 
+"calls": [
+{
+"name": "blink::LayoutPoint::y() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutRect::height() const", 
+"calls": [
+{
+"name": "blink::LayoutSize::height() const"
+}
+]
+}, 
+{
+"name": "blink::operator+(blink::LayoutUnit const&, blink::LayoutUnit const&)", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()"
+}
+]
+}, 
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}, 
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}, 
+{
+"name": "blink::LayoutUnit::setRawValue(int)"
+}
+]
+}
+]
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::FloatingObjects::getCachedlowestFloatLogicalBottom(blink::FloatingObject::Type) const", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()"
+}
+]
+}
+]
+}
+]
+}
+]
+}, 
+{
+"name": "blink::operator>(blink::LayoutUnit const&, blink::LayoutUnit const&)", 
+"calls": [
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}, 
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutObject::childrenInline() const", 
+"calls": [
+{
+"name": "blink::LayoutObject::LayoutObjectBitfields::childrenInline() const"
+}
+]
+}, 
+{
+"name": "blink::LayoutUnit::max()", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutUnit::min()", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()", 
+"calls": [
+{
+"name": "blink::LayoutUnit::LayoutUnit()"
+}
+]
+}
+]
+}, 
+{
+"name": "blink::LayoutBlockFlow::markLinesDirtyInBlockRange(blink::LayoutUnit, blink::LayoutUnit, blink::RootInlineBox*)", 
+"calls": [
+{
+"name": "blink::operator>=(blink::LayoutUnit const&, blink::LayoutUnit const&)", 
+"calls": [
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}, 
+{
+"name": "blink::LayoutUnit::rawValue() const"
+}
+]
+}
+]
+}
+]
+}
+]

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<style>
+* {
+    height: 4px;
+}
+span {
+    float: left;
+    box-shadow: 1px 1px 1e1px red;
+}
+div {
+    margin-top: 1e1px;
+}
+</style>
+<div></div><span></span>
+<script>
+    // Test for https://crbug.com/604331: this test passes if it does not crash.
+    document.documentElement.appendChild(document.createTextNode('PASS'));
+</script>
