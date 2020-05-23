@@ -62,6 +62,24 @@ class CCT(Function):
         return []
 
     @staticmethod
+    def fromRecord(string):
+        function = CCT()
+        for line in iter(string.splitlines()):
+            if (line.startswith("entering ")):
+                name = line[len("entering "):]
+                nextFunction = Function(name)
+                function.addCall(nextFunction)
+                function = nextFunction
+            elif (line.startswith("exiting ")):
+                name = line[len("exiting "):]
+                if (function.name != name):
+                    raise AssertionError("Incorrect nesting found when exiting " + name)
+                function = function.parent
+        if (function.parent):
+            raise AssertionError("Incorrect nesting found when exiting " + function.name)
+        return function
+
+    @staticmethod
     def fromJson(string):
         decodedFunctions = json.loads(string, cls=FunctionJSONDecoder)
         cct = CCT()

@@ -89,5 +89,27 @@ class TestCCT(unittest.TestCase):
         self.assertEquals(fn1.fromJson(fn1.asJson()).asJson(), fn1.asJson())
         self.assertEquals(cct.fromJson(cct.asJson()).asJson(), cct.asJson())
 
+    def testRecordDecoding(self):
+        cct = CCT.fromRecord("entering a\nentering b\nentering c\nexiting c\nexiting b\nexiting a\n")
+        self.assertEquals(len(cct.calls), 1)
+        fn1 = cct.calls[0]
+        self.assertEquals(fn1.name, "a")
+
+        self.assertEquals(len(fn1.calls), 1)
+        fn2 = fn1.calls[0]
+        self.assertEquals(fn2.name, "b")
+
+        self.assertEquals(len(fn2.calls), 1)
+        fn3 = fn2.calls[0]
+        self.assertEquals(fn3.name, "c")
+
+        self.assertEquals(len(fn3.calls), 0)
+
+    def testMalformedRecordDecoding(self):
+        self.assertRaises(AssertionError, CCT.fromRecord, "entering a\n")
+        self.assertRaises(AssertionError, CCT.fromRecord, "exiting a\n")
+        self.assertRaises(AssertionError, CCT.fromRecord, "entering a\nexiting b\n")
+        self.assertRaises(AssertionError, CCT.fromRecord, "entering a\nentering b\nexiting a\n")
+
 if __name__ == "__main__":
     unittest.main()

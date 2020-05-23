@@ -7,42 +7,45 @@ import unittest
 class TestIntegration(unittest.TestCase):
 
     def testBrokenQuicksortExample(self):
+        outputFile = "record.txt"
+        goodOutputFile = "good_record.txt"
+        badOutputFile = "bad_record.txt"
+        # Don't step on an existing file.
+        if os.path.isfile(outputFile):
+            raise AssertionError("Recording already exists: " + outputFile)
+        if os.path.isfile(goodOutputFile):
+            raise AssertionError("Recording already exists: " + goodOutputFile)
+        if os.path.isfile(badOutputFile):
+            raise AssertionError("Recording already exists: " + badOutputFile)
+
         try:
-            # Use a temporary scratch directory.
-            tempOutputDir = tempfile.mkdtemp()
-
-            executable = "examples/brokenQuicksort/out/brokenQuicksort"
+            executable = "test/data/out/brokenQuicksort"
             goodInput = "1 6 3 9 0"
-            goodCctFile = os.path.join(tempOutputDir, "good.json")
             badInput = "1 6 5 9 0"
-            badCctFile = os.path.join(tempOutputDir, "bad.json")
 
-            # Record good and bad runs.
-            lldbSteps = [
-                "command script import recordCommand.py",
-                "breakpoint set --name sort",
-                "run " + goodInput,
-                "record --output=" + goodCctFile,
-                "continue",
-                "run " + badInput,
-                "record --output=" + badCctFile,
-                "c",
-                "q"
-            ]
-            command = "lldb " + executable + " " + (' '.join("-o \"" + step + "\"" for step in lldbSteps))
-            proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            # Record good run.
+            proc = subprocess.Popen(executable + " " + goodInput, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
             out, err = proc.communicate()
             self.assertEqual("", err)
+            shutil.copyfile(outputFile, goodOutputFile)
+
+            # Record bad run.
+            proc = subprocess.Popen(executable + " " + badInput, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            out, err = proc.communicate()
+            self.assertEqual("", err)
+            shutil.copyfile(outputFile, badOutputFile)
 
             # Compare the two runs.
-            command = "./compare.py " + goodCctFile + " " + badCctFile
+            command = "./compare.py " + goodOutputFile + " " + badOutputFile
             proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
             out, err = proc.communicate()
             self.assertEqual("", err)
-            self.assertEqual(badCctFile + " diverged from " + goodCctFile + " in 1 places:"
-                "\n  swap(int*, int, int) which was called by quicksort(int*, int, int)\n", out)
+            self.assertEqual(badOutputFile + " diverged from " + goodOutputFile + " in 1 places:"
+                "\n  _Z4swapPiii which was called by _Z9quicksortPiii\n", out)
         finally:
-            shutil.rmtree(tempOutputDir)
+            os.remove(outputFile)
+            os.remove(goodOutputFile)
+            os.remove(badOutputFile)
 
 if __name__ == "__main__":
     unittest.main()

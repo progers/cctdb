@@ -10,7 +10,7 @@ from record.cct import CCT, Function
 def _loadCCT(file):
     with open (file, 'r') as inFile:
         data = inFile.read()
-    return CCT.fromJson(data)
+    return CCT.fromRecord(data)
 
 def _countFunctionCallNames(subtree, functionNameCount):
     for function in subtree.calls:

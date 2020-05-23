@@ -1,39 +1,48 @@
 .PHONY: tests
 
-all: examples/brokenQuicksort/out/brokenQuicksort tests
+all: tests
 
-examples/brokenQuicksort/out/brokenQuicksort: examples/brokenQuicksort/brokenQuicksort.cpp
-	g++ -g -Wall -std=c++11 -O0 -fno-inline examples/brokenQuicksort/brokenQuicksort.cpp -o examples/brokenQuicksort/out/brokenQuicksort
+test/data/out:
+	mkdir -p test/data/out
 
-test/data/out/fibonacci: test/data/fibonacci.cpp
-	g++ -g -Wall -std=c++11 -O0 -fno-inline test/data/fibonacci.cpp -o test/data/out/fibonacci
+test/data/out/record.o: record.cpp test/data/out
+	g++ -Wall -c record.cpp -o test/data/out/record.o
 
-test/data/out/quicksort: test/data/quicksort.cpp
-	g++ -g -Wall -std=c++11 -O0 -fno-inline test/data/quicksort.cpp -o test/data/out/quicksort
+test/data/out/quicksort.o: test/data/quicksort.cpp test/data/out
+	g++ -finstrument-functions -Wall -std=c++11 -O0 -fno-inline -c test/data/quicksort.cpp -o test/data/out/quicksort.o
 
-test/data/out/optimizedQuicksort: test/data/quicksort.cpp
-	g++ -g -Wall -std=c++11 -O1 -fno-inline test/data/quicksort.cpp -o test/data/out/optimizedQuicksort
+test/data/out/quicksort: test/data/out/record.o test/data/out/quicksort.o test/data/out
+	g++ test/data/out/record.o test/data/out/quicksort.o -o test/data/out/quicksort
 
-test/data/out/fibonacciThread: test/data/fibonacciThread.cpp
-	g++ -g -Wall -std=c++11 -stdlib=libc++ -O0 -fno-inline test/data/fibonacciThread.cpp -o test/data/out/fibonacciThread
+test/data/out/fibonacciThread.o: test/data/fibonacciThread.cpp test/data/out
+	g++ -finstrument-functions -Wall -std=c++11 -O0 -fno-inline -c test/data/fibonacciThread.cpp -o test/data/out/fibonacciThread.o
 
-test/data/out/complexInlinedTree: test/data/complexInlinedTree.cpp
-	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline test/data/complexInlinedTree.cpp -o test/data/out/complexInlinedTree
+test/data/out/fibonacciThread: test/data/out/record.o test/data/out/fibonacciThread.o test/data/out
+	g++ test/data/out/record.o test/data/out/fibonacciThread.o -o test/data/out/fibonacciThread
 
-test/data/out/complexInlinedCases: test/data/complexInlinedCases.cpp
-	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline test/data/complexInlinedCases.cpp -o test/data/out/complexInlinedCases
+test/data/out/singleInstructionInline.o: test/data/singleInstructionInline.cpp test/data/out
+	g++ -finstrument-functions -Wall -std=c++11 -O0 -fno-inline -c test/data/singleInstructionInline.cpp -o test/data/out/singleInstructionInline.o
 
-test/data/out/singleInstructionInline: test/data/singleInstructionInline.cpp
-	g++ -g -Wall -std=c++11 -stdlib=libc++ -fno-inline test/data/singleInstructionInline.cpp -o test/data/out/singleInstructionInline
+test/data/out/singleInstructionInline: test/data/out/record.o test/data/out/singleInstructionInline.o test/data/out
+	g++ test/data/out/record.o test/data/out/singleInstructionInline.o -o test/data/out/singleInstructionInline
 
-test/data/out/dynamicClassDarwin.o: test/data/dynamicClassDarwin.h test/data/dynamicClassDarwin.cpp
-	g++ -g -Wall -std=c++11 -O0 -fno-inline -dynamiclib -flat_namespace test/data/dynamicClassDarwin.cpp -o test/data/out/dynamicClassDarwin.o
+test/data/out/dynamicClassDarwin.o: test/data/dynamicClassDarwin.h test/data/dynamicClassDarwin.cpp test/data/out
+	g++ -finstrument-functions -Wall -std=c++11 -O0 -fno-inline -dynamiclib -flat_namespace test/data/out/record.o test/data/dynamicClassDarwin.cpp -o test/data/out/dynamicClassDarwin.o
 
-test/data/out/dynamicLoaderDarwin: test/data/dynamicClassDarwin.h test/data/dynamicLoaderDarwin.cpp test/data/out/dynamicClassDarwin.o
-	g++ -g -Wall -std=c++11 -O0 -fno-inline test/data/dynamicLoaderDarwin.cpp -o test/data/out/dynamicLoaderDarwin
+test/data/out/dynamicLoaderDarwin.o: test/data/dynamicLoaderDarwin.cpp test/data/out
+	g++ -finstrument-functions -Wall -std=c++11 -O0 -fno-inline -c test/data/dynamicLoaderDarwin.cpp -o test/data/out/dynamicLoaderDarwin.o
 
-tests: examples/brokenQuicksort/out/brokenQuicksort test/data/out/fibonacci test/data/out/quicksort test/data/out/optimizedQuicksort test/data/out/fibonacciThread test/data/out/complexInlinedTree test/data/out/complexInlinedCases test/data/out/singleInstructionInline test/data/out/dynamicClassDarwin.o test/data/out/dynamicLoaderDarwin
+test/data/out/dynamicLoaderDarwin: test/data/out/record.o test/data/out/dynamicLoaderDarwin.o test/data/out/dynamicClassDarwin.o test/data/out
+	g++ test/data/out/record.o test/data/out/dynamicClassDarwin.o test/data/out/dynamicLoaderDarwin.o -o test/data/out/dynamicLoaderDarwin
+
+test/data/out/brokenQuicksort.o: examples/brokenQuicksort/brokenQuicksort.cpp
+	g++ -finstrument-functions -Wall -std=c++11 -O0 -fno-inline -c examples/brokenQuicksort/brokenQuicksort.cpp -o test/data/out/brokenQuicksort.o
+
+test/data/out/brokenQuicksort: test/data/out/record.o test/data/out/brokenQuicksort.o test/data/out
+	g++ test/data/out/record.o test/data/out/brokenQuicksort.o -o test/data/out/brokenQuicksort
+
+tests: test/data/out/quicksort test/data/out/fibonacciThread test/data/out/singleInstructionInline test/data/out/dynamicLoaderDarwin test/data/out/brokenQuicksort
 	python -m unittest discover
 
 clean:
-	rm examples/brokenQuicksort/out/brokenQuicksort test/data/out/fibonacci test/data/out/quicksort test/data/out/optimizedQuicksort test/data/out/fibonacciThread test/data/out/complexInlinedTree test/data/out/complexInlinedCases test/data/out/singleInstructionInline test/data/out/dynamicClassDarwin.o test/data/out/dynamicLoaderDarwin
+	rm -f test/data/out/record.o test/data/out/quicksort.o test/data/out/quicksort test/data/out/fibonacciThread.o test/data/out/fibonacciThread test/data/out/singleInstructionInline.o test/data/out/singleInstructionInline test/data/out/dynamicLoaderDarwin test/data/out/dynamicLoaderDarwin.o test/data/out/dynamicClassDarwin.o test/data/out/brokenQuicksort.o test/data/out/brokenQuicksort

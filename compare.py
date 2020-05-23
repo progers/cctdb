@@ -67,7 +67,7 @@ def _findStack(callStack, otherSubtree):
 def _loadCCT(file):
     with open (file, 'r') as inFile:
         data = inFile.read()
-    return CCT.fromJson(data)
+    return CCT.fromRecord(data)
 
 def _printDivergences(divergences):
     # Destructively group divergences by their last call name and penultimate call name.
