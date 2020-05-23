@@ -40,3 +40,5 @@ compare.py good_recording.txt bad_recording.txt
 ```
 
 The bad input didn't call `thirdFunction(...)` but the good input did. Time to start debugging calls to `thirdFunction(...)`.
+
+A simple walkthrough of this technique on real code is described in [examples/brokenQuicksort](examples/brokenQuicksort/README.md).
