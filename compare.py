@@ -5,7 +5,7 @@
 import argparse
 import json
 import os.path
-from record.cct import CCT, Function
+from cct import CCT, Function
 
 # Return the cases where a subtreeA differs from another tree. In graph theory this is the tree
 # embedding problem but to be practical on CCTs, only the following divergences are located:

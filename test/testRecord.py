@@ -1,4 +1,4 @@
-from record.cct import CCT, Function
+from cct import CCT, Function
 import os
 import unittest
 import subprocess
