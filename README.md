@@ -3,52 +3,39 @@ Calling Context Tree Debugging
 
 Warning: This is in development and is not ready to use.
 
-CCTDB is a debugging technique where every function call is recorded for two runs of a program and then compared to see where they diverge. This has been implemented as an LLDB script for recording function calls and some simple analysis scripts for comparing recordings.
+CCTDB is a debugging technique where a graph of all function calls is recorded for two runs of a program and then compared to see where they differ. This has been implemented using compile-time instrumentation for recording function calls, and some simple analysis scripts for comparing recordings.
 
-This technique is useful for large software projects where a failing testcase is available but it's not obvious where to start debugging. Many bugs in Chromium end up being trivial one-line fixes where an engineer spends days finding the bug but only a few minutes fixing it. CCTDB can be used to save time by automatically narrowing in on suspect code.
+This technique is useful for large software projects where a failing testcase is available but it's not obvious where to start debugging. Many bugs in Chromium require more time debugging than implementing a fix. CCTDB can save time by methodically narrowing in on suspect code.
 
 Tutorial
 ---------
-The first step is to start debugging your program with LLDB by setting a breakpoint at some high-level entry point (e.g., `main()`):
+
+The first step is to compile the `record.cpp` helper, then build the target program with `-finstrument-functions record.o`:
 ```
-> lldb path/to/program
-(lldb) breakpoint set --name main
-(lldb) run [known-good arguments]
-[breakpoint hit]
+g++ -c record.cpp -o record.o
+g++ -finstrument-functions record.o example_program.cpp -o example_program
 ```
 
-Now record every function call made from the function `int main()` by loading and running the `record` script:
+Then record every function call for a good and bad run of the program:
 ```
-(lldb) command script import path/to/recordCommand.py
-The "record" command has been installed, type "help record" for more information.
-(lldb) record --output good.json
-```
-
-This will record a Calling Context Tree (CCT) which has a format like the following:
-```
-[
-    {
-        "name": "int main()"
-        "calls": [
-            { "name": "int secondFunction(...)" },
-            { "name": "void thirdFunction(...)" },
-            { "name": "int secondFunction(...)" }
-        ]
-    }
-]
+RECORD_CCT=good_recording.txt example_program [ good args ]
+RECORD_CCT=bad_recording.txt example_program [ args with bug ]
 ```
 
-Now record a second CCT but on a run of the program that contains a bug:
+This will record two Calling Context Trees (CCT) which have a format like the following:
 ```
-(lldb) run [known-bad arguments]
-[breakpoint hit]
-(lldb) record --output bad.json
+enter main
+enter functionA()
+enter functionB()
+exit functionB()
+exit functionA()
+exit main
 ```
 
 Finally, compare the two runs:
 ```
-> ./compare.py good.json bad.json
-    good.json diverged from bad.json in 1 places:
+compare.py good_recording.txt bad_recording.txt
+    good_recording.txt diverged from bad_recording.txt in 1 places:
         void thirdFunction(...) which was called by int main()
 ```
 

@@ -8,10 +8,10 @@
 //   RECORD_CCT=recording.txt ./my_program
 //
 //   recording.txt will look like:
-//       enter main
-//       enter functionA()
-//       enter functionB()
-//       exit functionB()
+//       entering main
+//       entering functionA()
+//       entering functionB()
+//       exiting functionB()
 //       ... etc ...
 
 #include <cstdlib>
