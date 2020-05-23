@@ -1,5 +1,22 @@
-#include <stdio.h>
+// Helper utility to record all function calls.
+// Compile the target executable with: -finstrument-functions record.o
+// Run the target executable with: RECORD_CCT=recording.txt
+//
+// Example:
+//   g++ -c record.cpp -o record.o
+//   g++ -finstrument-functions record.o my_program.cpp -o my_program
+//   RECORD_CCT=recording.txt ./my_program
+//
+//   recording.txt will look like:
+//       enter main
+//       enter functionA()
+//       enter functionB()
+//       exit functionB()
+//       ... etc ...
+
+#include <cstdlib>
 #include <dlfcn.h>
+#include <stdio.h>
 
 namespace {
 
@@ -9,7 +26,8 @@ static FILE *g_file;
 __attribute__((constructor, no_instrument_function))
 void constructor() {
   g_in_record = true;
-  g_file = fopen("record.txt", "w");
+  if (const char* record_cct = std::getenv("RECORD_CCT"))
+    g_file = fopen(record_cct, "w");
   g_in_record = false;
 }
 
@@ -22,7 +40,6 @@ void destructor() {
 
   g_in_record = false;
 }
-
 
 __attribute__((no_instrument_function))
 void record(void *dest, void *src, bool is_enter) {

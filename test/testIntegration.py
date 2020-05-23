@@ -7,45 +7,41 @@ import unittest
 class TestIntegration(unittest.TestCase):
 
     def testBrokenQuicksortExample(self):
-        outputFile = "record.txt"
-        goodOutputFile = "good_record.txt"
-        badOutputFile = "bad_record.txt"
-        # Don't step on an existing file.
-        if os.path.isfile(outputFile):
-            raise AssertionError("Recording already exists: " + outputFile)
-        if os.path.isfile(goodOutputFile):
-            raise AssertionError("Recording already exists: " + goodOutputFile)
-        if os.path.isfile(badOutputFile):
-            raise AssertionError("Recording already exists: " + badOutputFile)
-
         try:
+            # Use a temporary scratch directory.
+            tempOutputDir = tempfile.mkdtemp()
+
             executable = "test/data/out/brokenQuicksort"
             goodInput = "1 6 3 9 0"
+            goodRecording = os.path.join(tempOutputDir, "good.txt")
             badInput = "1 6 5 9 0"
+            badRecording = os.path.join(tempOutputDir, "bad.txt")
 
             # Record good run.
-            proc = subprocess.Popen(executable + " " + goodInput, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            environment = os.environ.copy()
+            environment["RECORD_CCT"] = goodRecording
+            proc = subprocess.Popen(executable + " " + goodInput, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=environment)
             out, err = proc.communicate()
-            self.assertEqual("", err)
-            shutil.copyfile(outputFile, goodOutputFile)
+            if not os.path.isfile(goodRecording):
+                raise AssertionError("Recording was not saved to \"" + goodRecording + "\"" + (": " + err if err else ""))
 
             # Record bad run.
-            proc = subprocess.Popen(executable + " " + badInput, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            environment = os.environ.copy()
+            environment["RECORD_CCT"] = badRecording
+            proc = subprocess.Popen(executable + " " + badInput, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=environment)
             out, err = proc.communicate()
-            self.assertEqual("", err)
-            shutil.copyfile(outputFile, badOutputFile)
+            if not os.path.isfile(badRecording):
+                raise AssertionError("Recording was not saved to \"" + badRecording + "\"" + (": " + err if err else ""))
 
             # Compare the two runs.
-            command = "./compare.py " + goodOutputFile + " " + badOutputFile
+            command = "./compare.py " + goodRecording + " " + badRecording
             proc = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
             out, err = proc.communicate()
             self.assertEqual("", err)
-            self.assertEqual(badOutputFile + " diverged from " + goodOutputFile + " in 1 places:"
+            self.assertEqual(badRecording + " diverged from " + goodRecording + " in 1 places:"
                 "\n  _Z4swapPiii which was called by _Z9quicksortPiii\n", out)
         finally:
-            os.remove(outputFile)
-            os.remove(goodOutputFile)
-            os.remove(badOutputFile)
+            shutil.rmtree(tempOutputDir)
 
 if __name__ == "__main__":
     unittest.main()

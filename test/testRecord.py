@@ -1,26 +1,27 @@
 from cct import CCT, Function
 import os
-import unittest
+import shutil
+import tempfile
 import subprocess
+import unittest
 
 class TestRecord(unittest.TestCase):
 
     def _record(self, executable, argsList = None):
-        outputFile = "record.txt"
-
-        # Don't step on an existing file.
-        if os.path.isfile(outputFile):
-            raise AssertionError("Recording already exists: " + outputFile)
-
         try:
+            # Use a temporary scratch directory.
+            tempOutputDir = tempfile.mkdtemp()
+            outputFile = os.path.join(tempOutputDir, "cct.txt")
+
             command = [ executable ]
             if argsList:
                 command.extend(argsList)
             environment = os.environ.copy()
+            environment["RECORD_CCT"] = outputFile
             proc = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=environment)
             out, err = proc.communicate()
 
-            # Ensure the raw code coverage file was written.
+            # Ensure the recording was written.
             if not os.path.isfile(outputFile):
                 raise AssertionError("Recording not saved to \"" + outputFile + "\"" + (": " + err if err else ""))
 
@@ -28,7 +29,7 @@ class TestRecord(unittest.TestCase):
                 record = inFile.read()
             return record
         finally:
-            os.remove(outputFile)
+            shutil.rmtree(tempOutputDir)
 
     def testBasicRecordingAtMain(self):
         record = self._record("test/data/out/quicksort", ["1"])

@@ -5,71 +5,51 @@ It took years to write the advanced brokenQuicksort program. Days before shippin
 
 Building
 ---------
-No compile-time instrumentation is needed so lets simply build the program:
+We need to build the program with instrumentation to record all function calls. Start in the project directory:
 ```
-> g++ -g examples/brokenQuicksort/brokenQuicksort.cpp -o brokenQuicksort
+cd examples/brokenQuicksort
+```
+
+Build the `record` helper, setting `CCT_DIR` to the directory containing `record.cpp`:
+```
+CCT_DIR=../../
+mkdir -p ${CCT_DIR}/out
+g++ -c ${CCT_DIR}/record.cpp -o ${CCT_DIR}/out/record.o
+```
+
+Build the `brokenQuicksort` program with `-finstrument-functions` and the `record.o` helper:
+```
+g++ -finstrument-functions ${CCT_DIR}/out/record.o brokenQuicksort.cpp -o out/brokenQuicksort
 ```
 
 The bug
 ---------
 All you know is that there's a bug with certain input:
 ```
-> ./brokenQuicksort 1 6 3 9 0
+out/brokenQuicksort 1 6 3 9 0
     0 1 3 6 9 // Amazingly sorted
-> ./brokenQuicksort 1 6 5 9 0
+out/brokenQuicksort 1 6 5 9 0
     0 1 9 6 5 // This is not sorted
 ```
 
 Using CCTDB
 --------
 
-Begin by starting `lldb` and setting a breakpoint. Naively recording the entire program can be expensive so lets try looking for bugs below the `sort` function:
-```
-> lldb brokenQuicksort
-Current executable set to 'brokenQuicksort' (x86_64).
-(lldb) breakpoint set --name sort
-Breakpoint 1: where = brokenQuicksort`sort(int*, int) + 17 at brokenQuicksort.cpp:44
-```
+By default, the instrumented program works as normal. If the `RECORD_CCT` environmental variable is present, it will be used as the filename to store a recording of all function calls.
 
-Next, import the recording script, adding the full path to `recordCommand.py` if necessary:
+Record two runs of the program: the first which is known to work (`1 6 3 9 0`) and the second which contains a bug (`1 6 5 9 0`).
 ```
-(lldb) command script import recordCommand.py
-The "record" command has been installed, type "help record" for more information.
-```
+RECORD_CCT=out/good.txt out/brokenQuicksort 1 6 3 9 0
+    0 1 3 6 9
 
-Now lets record two runs of the program: the first which is known to work (`1 6 3 9 0`) and the second which contains a bug (`1 6 5 9 0`).
-```
-(lldb) run 1 6 3 9 0
-...
-* breakpoint hit at brokenQuicksort.cpp:44
-   41   }
-   42
-   43   void sort(int* numbers, int count) {
--> 44       quicksort(numbers, 0, count);
-   45   }
-(lldb) record --output good.json
-Wrote recording to 'good.json'
-(lldb) continue
-Process 98681 exited with status = 0
-```
-```
-(lldb) run 1 6 5 9 0
-...
-* breakpoint hit at brokenQuicksort.cpp:44
-   41   }
-   42
-   43   void sort(int* numbers, int count) {
--> 44       quicksort(numbers, 0, count);
-   45   }
-(lldb) record --output bad.json
-Wrote recording to 'bad.json'
-(lldb) quit
+RECORD_CCT=out/bad.txt out/brokenQuicksort 1 6 5 9 0
+    0 1 9 6 5
 ```
 
 Finally, use the `compare.py` script to compare the two recordings:
 ```
-> ./compare.py good.json bad.json
-    bad.json diverged from good.json in 1 places:
+python ${CCT_DIR}/compare.py out/good.txt out/bad.txt
+    bad.txt diverged from good.txt in 1 places:
         swap(int*, int, int) which was called by quicksort(int*, int, int)
 ```
 
