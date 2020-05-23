@@ -10,5 +10,5 @@ __pycache__/
 *.dSYM/
 
 # Binaries
-examples/brokenQuicksort/out/*
 test/data/out/*
+out/*
