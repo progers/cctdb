@@ -39,7 +39,7 @@ class TestIntegration(unittest.TestCase):
             out, err = proc.communicate()
             self.assertEqual("", err)
             self.assertEqual(badRecording + " diverged from " + goodRecording + " in 1 places:"
-                "\n  _Z4swapPiii which was called by _Z9quicksortPiii\n", out)
+                "\n  swap(int*, int, int) which was called by quicksort(int*, int, int)\n", out)
         finally:
             shutil.rmtree(tempOutputDir)
 

@@ -111,5 +111,34 @@ class TestCCT(unittest.TestCase):
         self.assertRaises(AssertionError, CCT.fromRecord, "entering a\nexiting b\n")
         self.assertRaises(AssertionError, CCT.fromRecord, "entering a\nentering b\nexiting a\n")
 
+    def testDemangling(self):
+        cct = CCT()
+        # Demangling empty recording should not assert.
+        cct.demangle("c++filt -n")
+
+        # Demangling with no demangler should assert.
+        self.assertRaises(AssertionError, cct.demangle, "c--filt")
+
+        mangledAFn = Function("_Z8MangledAv")
+        cct.addCall(mangledAFn)
+        mangledBFn = Function("_Z8MangledBv")
+        mangledAFn.addCall(mangledBFn)
+        notMangledFn = Function("NotMangledAbc")
+        mangledBFn.addCall(notMangledFn)
+
+        cct.demangle("c++filt -n")
+
+        self.assertEquals(len(cct.calls), 1)
+        fn1 = cct.calls[0]
+        self.assertEquals(fn1.name, "MangledA()")
+
+        self.assertEquals(len(fn1.calls), 1)
+        fn2 = fn1.calls[0]
+        self.assertEquals(fn2.name, "MangledB()")
+
+        self.assertEquals(len(fn2.calls), 1)
+        fn3 = fn2.calls[0]
+        self.assertEquals(fn3.name, "NotMangledAbc")
+
 if __name__ == "__main__":
     unittest.main()

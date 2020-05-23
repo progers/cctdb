@@ -5,6 +5,7 @@
 
 from collections import defaultdict
 import json
+import subprocess
 
 class Function(object):
 
@@ -41,6 +42,22 @@ class Function(object):
 
     def uniqueCallNames(self):
         return self._callCountsByName.keys()
+
+    def _collectAllUniqueCallNames(self, names):
+        names.add(self.name)
+        for call in self.calls:
+            call._collectAllUniqueCallNames(names)
+
+    def _demangle(self, demangleMap):
+        if (self.name):
+            oldName = self.name
+            self.name = demangleMap[oldName]
+        oldCallCountsByName = self._callCountsByName
+        self._callCountsByName = defaultdict(int)
+        for oldName, count in oldCallCountsByName.iteritems():
+            self._callCountsByName[demangleMap[oldName]] = count
+        for call in self.calls:
+            call._demangle(demangleMap)
 
     def asJson(self, indent = None):
         return json.dumps(self, sort_keys=False, indent=indent, cls=FunctionJSONEncoder)
@@ -86,6 +103,30 @@ class CCT(Function):
         for function in decodedFunctions:
             cct.addCall(function)
         return cct
+
+    # Use a demangler to convert mangled function names to demangled function names.
+    # See c++filt: https://linux.die.net/man/1/c++filt
+    # For example: _Z1Av => A().
+    def demangle(self, demangler):
+        mangledNames = set()
+        self._collectAllUniqueCallNames(mangledNames)
+
+        proc = subprocess.Popen(demangler, shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        out, err = proc.communicate('\n'.join(str(e) for e in mangledNames))
+        if err != "":
+            raise AssertionError(err)
+        demangledNames = filter(None, out.split("\n"))
+
+        mangledCount = len(mangledNames)
+        demangledCount = len(demangledNames)
+        if mangledCount != demangledCount:
+            raise AssertionError("Demangling failed: tried to demangle " + str(mangledCount) + " functions but " + str(demangledCount) + " were demangled.")
+
+        demangledNameMap = {}
+        for index, mangledName in enumerate(mangledNames):
+            demangledNameMap[mangledName] = demangledNames[index]
+
+        self._demangle(demangledNameMap)
 
 class FunctionJSONEncoder(json.JSONEncoder):
 

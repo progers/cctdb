@@ -118,10 +118,26 @@ def main():
     parser = argparse.ArgumentParser(description="Compare calling context trees")
     parser.add_argument("recordingA", help="Recording for run A")
     parser.add_argument("recordingB", help="Recording for run B")
+    parser.add_argument("-d", "--demangler", help="Demangler")
     args = parser.parse_args()
 
     cctA = _loadCCT(args.recordingA)
     cctB = _loadCCT(args.recordingB)
+
+    if args.demangler:
+        cctA.demangle(args.demangler)
+        cctB.demangle(args.demangler)
+    else:
+        # Try demangling using c++filt but fail silently.
+        # MacOS's c++filt version is older and strips underscores by default,
+        # which is different from the latest GNU C++filt. Work around this
+        # difference by forcing underscores to not be stripped using -n.
+        try:
+            cctA.demangle("c++filt -n")
+            cctB.demangle("c++filt -n")
+        except:
+            pass
+
     _printCCTDivergences(cctA, cctB, args.recordingA, args.recordingB)
 
 if __name__ == "__main__":
