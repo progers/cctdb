@@ -24,12 +24,12 @@ RECORD_CCT=bad_recording.txt example_program [ args with bug ]
 
 This will record two Calling Context Trees (CCT) which have a format like the following:
 ```
-enter main
-enter functionA()
-enter functionB()
-exit functionB()
-exit functionA()
-exit main
+[thread id] enter main
+[thread id] enter functionA()
+[thread id] enter functionB()
+[thread id] exit functionB()
+[thread id] exit functionA()
+[thread id] exit main
 ```
 
 Finally, compare the two runs:

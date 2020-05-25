@@ -8,57 +8,63 @@
 //   RECORD_CCT=recording.txt ./my_program
 //
 //   recording.txt will look like:
-//       entering main
-//       entering functionA()
-//       entering functionB()
-//       exiting functionB()
+//       [thread id] entering main
+//       [thread id] entering functionA()
+//       [thread id] entering functionB()
+//       [thread id] exiting functionB()
 //       ... etc ...
 
-#include <cstdlib>
 #include <dlfcn.h>
-#include <stdio.h>
+#include <fstream>
+#include <mutex>
+#include <thread>
 
 namespace {
 
+// True while in recording logic that should not be recorded.
 static bool g_in_record = false;
-static FILE *g_file;
+
+static std::mutex mut;
+static std::ofstream* g_file;
 
 __attribute__((constructor, no_instrument_function))
 void constructor() {
   g_in_record = true;
-  if (const char* record_cct = std::getenv("RECORD_CCT"))
-    g_file = fopen(record_cct, "w");
+  // TODO(phil): Improve performance when RECORD_CCT is not specified.
+  if (const char* filename = std::getenv("RECORD_CCT")) {
+    g_file = new std::ofstream();
+    g_file->open(filename);
+  }
   g_in_record = false;
 }
 
 __attribute__((destructor, no_instrument_function))
 void destructor() {
   g_in_record = true;
-
   if (g_file)
-    fclose(g_file);
-
+    g_file->close();
   g_in_record = false;
 }
 
 __attribute__((no_instrument_function))
 void record(void *dest, void *src, bool is_enter) {
-  if (g_in_record || !g_file)
-    return;
+  // TODO(phil): Consider lock-free approach such as glog.
+  std::lock_guard<std::mutex> lock(mut);
+  if (!g_in_record && g_file) {
+    g_in_record = true;
 
-  g_in_record = true;
+    // TODO(phil): Cache the dladdr call to reduce lookups (see:
+    // https://michael.hinespot.com/tutorials/gcc_trace_functions).
+    Dl_info dest_info;
+    // TODO(phil): Add a buffer for better performance (see:
+    // https://github.com/microsoft/ChakraCore/blob/master/lib/Runtime/PlatformAgnostic/Platform/Common/Trace.cpp).
+    *g_file << "tid" <<  std::this_thread::get_id();
+    *g_file << " " << (is_enter ? "entering" : "exiting");
+    *g_file << " " << (dladdr(dest, &dest_info) ? dest_info.dli_sname : "?");
+    *g_file << std::endl;
 
-  // TODO(phil): Cache the dladdr call to reduce lookups (see:
-  // https://michael.hinespot.com/tutorials/gcc_trace_functions).
-  Dl_info dest_info;
-  // TODO(phil): Add a buffer for better performance (see:
-  // https://github.com/microsoft/ChakraCore/blob/master/lib/Runtime/PlatformAgnostic/Platform/Common/Trace.cpp).
-  fprintf(g_file, "%s %s\n",
-      is_enter ? "entering" : "exiting",
-      dladdr(dest, &dest_info) ? dest_info.dli_sname : "?");
-  fflush(g_file);
-
-  g_in_record = false;
+    g_in_record = false;
+  }
 }
 
 }

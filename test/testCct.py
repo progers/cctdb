@@ -111,6 +111,10 @@ class TestCCT(unittest.TestCase):
         self.assertRaises(AssertionError, CCT.fromRecord, "entering a\nexiting b\n")
         self.assertRaises(AssertionError, CCT.fromRecord, "entering a\nentering b\nexiting a\n")
 
+    def testRecordDecodingWithThreads(self):
+        cct = CCT.fromRecord("tid123 entering a\ntid234 entering b\ntid234 entering c\ntid234 exiting c\ntid234 exiting b\ntid123 exiting a\n")
+        self.assertEquals(cct.asJson(), '[{"name": "a"}, {"name": "b", "calls": [{"name": "c"}]}]')
+
     def testDemangling(self):
         cct = CCT()
         # Demangling empty recording should not assert.

@@ -1,7 +1,7 @@
 // A fibonacci program with [NUM_THREADS] threads.
 //
 // This program computes the nth fibonacci number multiple times, each in a different thread. For
-// simplicty and determinism, the core algorithm is not multithreaded. The results of the duplicated
+// simplicity and determinism, the core algorithm is not multithreaded. The results of the duplicated
 // work are checked before returning the result.
 //
 // Usage: ./fibonacciThread [n]
@@ -20,9 +20,6 @@ unsigned long fib(unsigned long n) {
 }
 
 unsigned long computeFibonacci(unsigned long n) {
-    // no-op call into a different module as a test of record.py.
-    fprintf(stdout, "");
-
     if (n == 0)
         return 0;
     return fib(n);

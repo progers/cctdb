@@ -5,6 +5,7 @@
 
 from collections import defaultdict
 import json
+import re
 import subprocess
 
 class Function(object):
@@ -14,6 +15,9 @@ class Function(object):
         self.name = name
         self.parent = None
         self._callCountsByName = defaultdict(int)
+
+    def isRoot(self):
+        return False
 
     def addCall(self, call):
         if call.parent:
@@ -78,23 +82,40 @@ class CCT(Function):
     def callStack(self):
         return []
 
+    def isRoot(self):
+        return True
+
     @staticmethod
     def fromRecord(string):
-        function = CCT()
-        for line in iter(string.splitlines()):
-            if (line.startswith("entering ")):
-                name = line[len("entering "):]
-                nextFunction = Function(name)
-                function.addCall(nextFunction)
-                function = nextFunction
-            elif (line.startswith("exiting ")):
-                name = line[len("exiting "):]
-                if (function.name != name):
-                    raise AssertionError("Incorrect nesting found when exiting " + name)
-                function = function.parent
-        if (function.parent):
-            raise AssertionError("Incorrect nesting found when exiting " + function.name)
-        return function
+        # The record format (see: record.cpp):
+        #   [optional threadid ][entering|exiting][function]
+        recordRx = re.compile(r"^(?P<threadId>[^\s]*)\s?(?P<enteringExiting>entering|exiting)\s(?P<functionName>.+)\n", re.MULTILINE)
+
+        rootFunction = CCT()
+        currentFunctionByThread = {}
+        for match in recordRx.finditer(string):
+            threadId = match.group("threadId")
+            if not threadId:
+                threadId = "no thread"
+            enteringExiting = match.group("enteringExiting")
+            functionName = match.group("functionName")
+            if enteringExiting == "entering":
+                nextFunction = Function(functionName)
+                if threadId not in currentFunctionByThread:
+                    currentFunctionByThread[threadId] = rootFunction
+                currentFunctionByThread[threadId].addCall(nextFunction)
+                currentFunctionByThread[threadId] = nextFunction
+            else:
+                if threadId not in currentFunctionByThread:
+                    raise AssertionError("Incorrect nesting found when exiting " + functionName)
+                currentFunction = currentFunctionByThread[threadId]
+                if currentFunction.name != functionName:
+                    raise AssertionError("Incorrect nesting found when exiting " + functionName)
+                currentFunctionByThread[threadId] = currentFunction.parent
+        for threadId, function in currentFunctionByThread.items():
+            if not function.isRoot():
+                raise AssertionError("Incorrect nesting found when exiting " + function.name)
+        return rootFunction
 
     @staticmethod
     def fromJson(string):

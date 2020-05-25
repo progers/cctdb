@@ -1,8 +1,8 @@
 from cct import CCT, Function
 import os
 import shutil
-import tempfile
 import subprocess
+import tempfile
 import unittest
 
 class TestRecord(unittest.TestCase):
@@ -31,18 +31,30 @@ class TestRecord(unittest.TestCase):
         finally:
             shutil.rmtree(tempOutputDir)
 
+    def _stripThreadIds(self, records):
+        strippedRecords = []
+        for record in iter(records.splitlines()):
+            if record.startswith("tid"):
+                firstSpace = record.find(' ')
+                if firstSpace != -1:
+                    record = record[firstSpace+1:]
+            strippedRecords.append(record)
+        return '\n'.join(strippedRecords)
+
     def testBasicRecordingAtMain(self):
         record = self._record("test/data/out/quicksort", ["1"])
-        self.assertEquals(record, "entering main\nentering _Z4sortPii\nentering _Z9quicksortPiii\nexiting _Z9quicksortPiii\nexiting _Z4sortPii\nexiting main\n")
+        record = self._stripThreadIds(record)
+        self.assertEquals(record, "entering main\nentering _Z4sortPii\nentering _Z9quicksortPiii\nexiting _Z9quicksortPiii\nexiting _Z4sortPii\nexiting main")
 
     def testRecordWithDynamicLibrary(self):
         record = self._record("test/data/out/dynamicLoaderDarwin")
         self.assertEquals(CCT.fromRecord(record).asJson(), '[{"name": "main", "calls": [{"name": "create", "calls": [{"name": "_ZN18DynamicClassDarwinC1Ev", "calls": [{"name": "_ZN18DynamicClassDarwinC2Ev"}]}]}, {"name": "_ZN18DynamicClassDarwin13dynamicCallABEv", "calls": [{"name": "_ZN18DynamicClassDarwin5callAEv"}, {"name": "_ZN18DynamicClassDarwin5callBEv"}]}, {"name": "destroy", "calls": [{"name": "_ZN18DynamicClassDarwinD0Ev", "calls": [{"name": "_ZN18DynamicClassDarwinD1Ev", "calls": [{"name": "_ZN18DynamicClassDarwinD2Ev"}]}]}]}, {"name": "_Z11notDynamicCv"}]}]')
 
-    @unittest.skip("FIXME(phil): support threads.")
     def testRecordingWithThreads(self):
-        record = self._record("test/data/out/fibonacciThread", ["3"])
-        self.assertEquals(CCT.fromRecord(record).asJson(), "abc")
+        record = self._record("test/data/out/fibonacciThread", ["2"])
+        # computeFibonacciUsingJustOneThread should have been called 3 times.
+        self.assertEquals(record.count("entering _Z34computeFibonacciUsingJustOneThreadmm"), 3)
+        self.assertEquals(record.count("exiting _Z34computeFibonacciUsingJustOneThreadmm"), 3)
 
     def testSingleInstructionInline(self):
         record = self._record("test/data/out/singleInstructionInline")
