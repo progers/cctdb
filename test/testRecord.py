@@ -46,6 +46,7 @@ class TestRecord(unittest.TestCase):
         record = self._stripThreadIds(record)
         self.assertEquals(record, "entering main\nentering _Z4sortPii\nentering _Z9quicksortPiii\nexiting _Z9quicksortPiii\nexiting _Z4sortPii\nexiting main")
 
+    @unittest.skipUnless(os.uname()[0] == "Darwin", "requires Darwin")
     def testRecordWithDynamicLibrary(self):
         record = self._record("test/data/out/dynamicLoaderDarwin")
         self.assertEquals(CCT.fromRecord(record).asJson(), '[{"name": "main", "calls": [{"name": "create", "calls": [{"name": "_ZN18DynamicClassDarwinC1Ev", "calls": [{"name": "_ZN18DynamicClassDarwinC2Ev"}]}]}, {"name": "_ZN18DynamicClassDarwin13dynamicCallABEv", "calls": [{"name": "_ZN18DynamicClassDarwin5callAEv"}, {"name": "_ZN18DynamicClassDarwin5callBEv"}]}, {"name": "destroy", "calls": [{"name": "_ZN18DynamicClassDarwinD0Ev", "calls": [{"name": "_ZN18DynamicClassDarwinD1Ev", "calls": [{"name": "_ZN18DynamicClassDarwinD2Ev"}]}]}]}, {"name": "_Z11notDynamicCv"}]}]')
