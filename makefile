@@ -19,7 +19,7 @@ test/data/out/fibonacciThread.o: test/data/fibonacciThread.cpp test/data/out
 	g++ -finstrument-functions -Wall -std=c++11 -O0 -fno-inline -c test/data/fibonacciThread.cpp -o test/data/out/fibonacciThread.o
 
 test/data/out/fibonacciThread: out/record.o test/data/out/fibonacciThread.o test/data/out
-	g++ out/record.o test/data/out/fibonacciThread.o -o test/data/out/fibonacciThread
+	g++ out/record.o test/data/out/fibonacciThread.o -lpthread -o test/data/out/fibonacciThread
 
 test/data/out/singleInstructionInline.o: test/data/singleInstructionInline.cpp test/data/out
 	g++ -finstrument-functions -Wall -std=c++11 -O0 -fno-inline -c test/data/singleInstructionInline.cpp -o test/data/out/singleInstructionInline.o
